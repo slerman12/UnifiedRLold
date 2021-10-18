@@ -16,12 +16,12 @@ action_repeat: 4
 discount: 0.99
 # train settings
 num_train_frames:  1000001
-num_seed_frames: 1601
-#num_seed_frames: 4004  # should be >= replay_buffer_num_workers * store_every_frames + action_repeat ?
+#num_seed_frames: 1600
+num_seed_frames: 4004  # should be >= replay_buffer_num_workers * truncate_episode_len + action_repeat ?
 #num_seed_frames: 12000
 #num_exploration_steps: 5000
 max_episode_len: 27000  # must be > update_every_steps, >= nstep - 1
-truncate_episode_len: 1600
+truncate_episode_len: 1000
 # eval
 #eval_every_frames: 100000
 #num_eval_episodes: 10  # would this take too long in atari?
@@ -33,7 +33,7 @@ save_snapshot: false
 replay_buffer_size: ${num_train_frames}
 #store_every_frames: 1000  # should be below seed frames I think
 #store_every_frames: false
-replay_buffer_num_workers: 1
+replay_buffer_num_workers: 4
 #replay_buffer_num_workers: 1
 prioritized_replay: false
 prioritized_replay_alpha: 0.6
@@ -42,6 +42,7 @@ nstep: 10
 batch_size: 32
 # misc
 seed: 1
+#device: cpu
 device: cuda
 save_video: true
 save_train_video: false

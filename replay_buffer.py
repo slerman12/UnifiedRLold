@@ -69,6 +69,7 @@ class ReplayBufferStorage:
             self._num_transitions += int(eps_len)
 
     def _store_episode(self, episode):
+        # print("entered store")
         eps_idx = self._num_episodes
         eps_len = episode_len(episode)
         self._num_episodes += 1
@@ -119,6 +120,7 @@ class ReplayBuffer(IterableDataset):
         return True
 
     def _try_fetch(self):
+        # print("entered fetch")
         if self._samples_since_last_fetch < self._fetch_every:
             return
         self._samples_since_last_fetch = 0
@@ -131,15 +133,20 @@ class ReplayBuffer(IterableDataset):
         for eps_fn in eps_fns:
             eps_idx, eps_len = [int(x) for x in eps_fn.stem.split('_')[1:]]
             if eps_idx % self._num_workers != worker_id:  # each worker stores their own dedicated data
+                # print("entered 1")
                 # if worker_id in self.worker_not_empty:  # allow overlap at beginning to avoid empty samples; kinda hacky
-                    continue
+                continue
             if eps_fn in self._episodes.keys():  # don't store redundantly
+                # print("entered 2")
                 break
             if fetched_size + eps_len > self._max_size:  # don't overfill (todo shouldn't you just pop in that case?)
+                # print("entered 3")
                 break
             fetched_size += eps_len
             if not self._store_episode(eps_fn):
+                # print("entered 4")
                 break
+            # print("left all")
             # self.worker_not_empty.add(worker_id)
 
     def _sample(self):

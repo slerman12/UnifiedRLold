@@ -429,6 +429,7 @@ def wrap_deepmind(env, episode_life=True, clip_rewards=True, scale=False):
 
 def make(env_id, frame_stack=4, action_repeat=1, max_episode_len=27000, truncate_episode_len=1000, seed=0, train=True):
     env_id = f'{env_id}{_GYM_ID_SUFFIX}'
+    # env_id = f'ALE/{env_id.capitalize()}-v5'
     env = gym.make(env_id)
     env.seed(seed)
     env = NoopResetEnv(env, noop_max=30)
@@ -441,8 +442,12 @@ def make(env_id, frame_stack=4, action_repeat=1, max_episode_len=27000, truncate
     env = ActionDTypeWrapper(env, np.int64, discrete=True)
     # env = ActionRepeatWrapper(env, action_repeat)
     env = FrameStackWrapper(env, frame_stack)
+    if max_episode_len and action_repeat:
+        max_episode_len = max_episode_len // action_repeat
     env = TimeLimit(env, max_episode_len=max_episode_len)
     if train:
+        if truncate_episode_len and action_repeat:
+            truncate_episode_len = truncate_episode_len // action_repeat
         env = TimeLimit(env, max_episode_len=truncate_episode_len, resume=True)
     env = ExtendedTimeStepWrapper(env)
     return env

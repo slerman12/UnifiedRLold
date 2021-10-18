@@ -68,7 +68,8 @@ class Workspace:
         self.train_env = envs.make(self.cfg.task_name, self.cfg.frame_stack, self.cfg.action_repeat,
                                    self.cfg.max_episode_len, self.cfg.truncate_episode_len, self.cfg.seed)
         self.eval_env = envs.make(self.cfg.task_name, self.cfg.frame_stack, self.cfg.action_repeat,
-                                  self.cfg.max_episode_len, self.cfg.truncate_episode_len, self.cfg.seed, train=False)
+                                  self.cfg.max_episode_len, self.cfg.truncate_episode_len, self.cfg.seed,
+                                  train=False)
 
         # create replay buffer
         data_specs = (self.train_env.observation_spec(),
@@ -188,6 +189,11 @@ class Workspace:
                                         self.global_step,
                                         eval_mode=False)
 
+            # if time_step.last():
+            #     print("ts ", self.global_step, self.cfg.truncate_episode_len, episode_step, self.cfg.nstep)
+            # if self.global_step == self.cfg.truncate_episode_len:
+            #     print("gs", self.global_step, time_step.last(), episode_step, self.cfg.nstep)
+
             # try to update the agent
             # print(len(self.replay_loader))
             if not seed_until_step(self.global_step):
@@ -204,6 +210,8 @@ class Workspace:
             time_step = self.train_env.step(action)
             episode_reward += time_step.reward
             store_it = time_step.last() and episode_step >= self.cfg.nstep
+            # if store_it:
+            #     print("store_it True")
             self.replay_storage.add(time_step, store_trace=store_it)
             # print(store_it,
             #       len(self.replay_loader),
