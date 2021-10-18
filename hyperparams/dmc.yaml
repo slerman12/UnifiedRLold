@@ -15,8 +15,8 @@ discount: 0.99
 # train settings
 num_seed_frames: 4000
 #num_seed_frames: 10
-max_episode_len: false
-truncate_episode_len: false
+max_episode_frames: false
+truncate_episode_frames: false
 #max_episode_len: 27000
 # eval
 eval_every_frames: 10000
