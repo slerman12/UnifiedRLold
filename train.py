@@ -19,15 +19,15 @@ import utils
 from logger import Logger
 from replay_buffer import ReplayBufferStorage, make_replay_loader
 
-# from video import TrainVideoRecorder, VideoRecorder
+from video import TrainVideoRecorder, VideoRecorder  # m1 mac: commented out freeimage imports in imageio/plugins/_init_
 
 torch.backends.cudnn.benchmark = True
 
 
 def make_agent(obs_spec, action_spec, cfg):
     cfg.obs_shape = obs_spec.shape
-    cfg.action_shape = action_spec.shape
     cfg.discrete = hasattr(action_spec, 'discrete')
+    cfg.action_shape = (action_spec.num_actions,) if cfg.discrete else action_spec.shape
     return hydra.utils.instantiate(cfg)
 
 
@@ -86,10 +86,10 @@ class Workspace:
             self.cfg.save_snapshot, self.cfg.nstep, self.cfg.discount)
         self._replay_iter = None
 
-        # self.video_recorder = VideoRecorder(
-        #     self.work_dir if self.cfg.save_video else None)
-        # self.train_video_recorder = TrainVideoRecorder(
-        #     self.work_dir if self.cfg.save_train_video else None)
+        self.video_recorder = VideoRecorder(
+            self.work_dir if self.cfg.save_video else None)
+        self.train_video_recorder = TrainVideoRecorder(
+            self.work_dir if self.cfg.save_train_video else None)
 
     @property
     def global_step(self):
@@ -114,19 +114,19 @@ class Workspace:
         eval_until_episode = utils.Until(self.cfg.num_eval_episodes)
         while eval_until_episode(episode):
             time_step = self.eval_env.reset()
-            # self.video_recorder.init(self.eval_env, enabled=(episode == 0))
+            self.video_recorder.init(self.eval_env, enabled=(episode == 0))
             while not time_step.last():
                 with torch.no_grad(), utils.eval_mode(self.agent):
                     action = self.agent.act(time_step.observation,
                                             self.global_step,
                                             eval_mode=True)
                 time_step = self.eval_env.step(action)
-                # self.video_recorder.record(self.eval_env)
+                self.video_recorder.record(self.eval_env)
                 total_reward += time_step.reward
                 step += 1
 
             episode += 1
-            # self.video_recorder.save(f'{self.global_frame}.mp4')
+            self.video_recorder.save(f'{self.global_frame}.mp4')
 
         with self.logger.log_and_dump_ctx(self.global_frame, ty='eval') as log:
             log('episode_reward', total_reward / episode)
@@ -146,12 +146,12 @@ class Workspace:
         episode_step, episode_reward = 0, 0
         time_step = self.train_env.reset()
         self.replay_storage.add(time_step)
-        # self.train_video_recorder.init(time_step.observation)
+        self.train_video_recorder.init(time_step.observation)
         metrics = None
         while train_until_step(self.global_step):
             if time_step.last():
                 self._global_episode += 1
-                # self.train_video_recorder.save(f'{self.global_frame}.mp4')
+                self.train_video_recorder.save(f'{self.global_frame}.mp4')
                 # wait until all the metrics schema is populated
                 if metrics is not None:
                     # log stats
@@ -170,7 +170,7 @@ class Workspace:
                 # reset env
                 time_step = self.train_env.reset()
                 self.replay_storage.add(time_step)
-                # self.train_video_recorder.init(time_step.observation)
+                self.train_video_recorder.init(time_step.observation)
                 # try to save snapshot
                 if self.cfg.save_snapshot:
                     self.save_snapshot()
@@ -216,7 +216,7 @@ class Workspace:
             # print(store_it,
             #       len(self.replay_loader),
             #       trace_size, time_step.last(), store_every_step(episode_step))
-            # self.train_video_recorder.record(time_step.observation)
+            self.train_video_recorder.record(time_step.observation)
             episode_step += 1
             self._global_step += 1
 

@@ -2,7 +2,7 @@ import hydra
 from pathlib import Path
 
 
-@hydra.main(config_path='cfgs', config_name='config-atari')
+@hydra.main(config_path='cfgs', config_name='config-dmc')
 def main(cfg):
     from train import Workspace as W
     root_dir = Path.cwd()

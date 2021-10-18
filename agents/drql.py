@@ -66,7 +66,7 @@ class DRQLAgent(object):
         obs = torch.as_tensor(obs, device=self.device)
         obs = self.encoder(obs.unsqueeze(0))
         q = self.critic(obs)
-        action = q.max(dim=1)[1]
+        action = q.max(dim=-1)[1]
 
         if step < self.num_expl_steps and np.random.rand() < eps:
             action = torch.randint(low=0, high=self.num_actions, size=action.shape)

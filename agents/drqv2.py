@@ -18,7 +18,6 @@ class DrQV2Agent:
                  hidden_dim, critic_target_tau, num_expl_steps,
                  update_every_steps, stddev_schedule, stddev_clip, use_tb):
         self.discrete = discrete
-        action_shape = [1] if discrete else action_shape
         self.device = device
         self.critic_target_tau = critic_target_tau
         self.update_every_steps = update_every_steps

@@ -17,9 +17,7 @@ class SACAgent:
                  update_every_steps, stddev_clip, use_tb,
                  init_temperature, learnable_temperature):
         super().__init__()
-
         self.discrete = discrete
-        action_shape = [1] if discrete else action_shape
         self.device = device
         self.critic_target_tau = critic_target_tau
         self.update_every_steps = update_every_steps
