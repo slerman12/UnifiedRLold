@@ -1,3 +1,4 @@
+# https://github.com/google/dopamine/blob/df97ba1b0d4edf90824534efcdda20d6549c37a9/dopamine/discrete_domains/atari_lib.py#L329-L515
 import cv2
 import gym
 import numpy as np
@@ -55,12 +56,6 @@ class AtariPreprocessing(dm_env.Environment):
         self.game_over = False
         self.lives = 0  # Will need to be set by reset().
 
-        # Convert gym action and observation spaces to dm_env specs.
-        self._observation_spec = space2spec(self.gym_env.observation_space,
-                                            name='observation')
-        self._action_spec = space2spec(self.gym_env.action_space, name='action')
-        self._reset_next_step = True
-
     def close(self):
         self.gym_env.close()
 
@@ -102,7 +97,6 @@ class AtariPreprocessing(dm_env.Environment):
           observation: numpy array, the initial observation emitted by the
             environment.
         """
-        self._reset_next_step = False
         self.gym_env.reset()
         self.lives = self.gym_env.ale.lives()
         self._fetch_grayscale_observation(self.screen_buffer[0])
@@ -127,9 +121,6 @@ class AtariPreprocessing(dm_env.Environment):
             episode is over.
           info: Gym API's info data structure.
         """
-        if self._reset_next_step:
-            return self.reset()
-
         reward = 0.
 
         for time_step in range(self.frame_skip):
@@ -158,8 +149,6 @@ class AtariPreprocessing(dm_env.Environment):
         self.game_over = game_over
 
         # Convert the gym step result to a dm_env TimeStep.
-        self._reset_next_step = done
-
         if done:
             is_truncated = info.get('TimeLimit.truncated', False)
             if is_truncated:
@@ -198,7 +187,8 @@ class AtariPreprocessing(dm_env.Environment):
         return np.expand_dims(int_image, axis=2)
 
 
-def make(env_id, frame_stack=4, action_repeat=1, max_episode_len=27000, truncate_episode_len=1000, seed=0, train=True):
+def make(env_id, frame_stack=4, action_repeat=1, max_episode_frames=27000, truncate_episode_frames=1000, seed=0,
+         train=True):
     env_id = f'ALE/{env_id.capitalize()}-v5'
     env = gym.make(env_id)
     env.seed(seed)
@@ -206,12 +196,12 @@ def make(env_id, frame_stack=4, action_repeat=1, max_episode_len=27000, truncate
                              terminal_on_life_loss=False, screen_size=84)
     env = FrameStackWrapper(env, frame_stack)
     env = ActionDTypeWrapper(env, np.int64, discrete=True)
-    if max_episode_len and action_repeat:
-        max_episode_len = max_episode_len // action_repeat
-    env = TimeLimit(env, max_episode_len=max_episode_len)
+    if max_episode_frames and action_repeat:
+        max_episode_frames = max_episode_frames // action_repeat
+    env = TimeLimit(env, max_episode_len=max_episode_frames)
     if train:
-        if truncate_episode_len and action_repeat:
-            truncate_episode_len = truncate_episode_len // action_repeat
-        env = TimeLimit(env, max_episode_len=truncate_episode_len, resume=True)
+        if truncate_episode_frames and action_repeat:
+            truncate_episode_frames = truncate_episode_frames // action_repeat
+        env = TimeLimit(env, max_episode_len=truncate_episode_frames, resume=True)
     env = ExtendedTimeStepWrapper(env)
     return env

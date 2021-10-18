@@ -66,9 +66,9 @@ class Workspace:
 
         # create envs
         self.train_env = envs.make(self.cfg.task_name, self.cfg.frame_stack, self.cfg.action_repeat,
-                                   self.cfg.max_episode_len, self.cfg.truncate_episode_len, self.cfg.seed)
+                                   self.cfg.max_episode_frames, self.cfg.truncate_episode_frames, self.cfg.seed)
         self.eval_env = envs.make(self.cfg.task_name, self.cfg.frame_stack, self.cfg.action_repeat,
-                                  self.cfg.max_episode_len, self.cfg.truncate_episode_len, self.cfg.seed,
+                                  self.cfg.max_episode_frames, self.cfg.truncate_episode_frames, self.cfg.seed,
                                   train=False)
 
         # create replay buffer

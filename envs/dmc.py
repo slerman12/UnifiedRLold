@@ -8,7 +8,7 @@ from dm_control.suite.wrappers import action_scale, pixels
 from .shared import *
 
 
-def make(name, frame_stack, action_repeat, max_episode_len, truncate_episode_len, seed, train=True):
+def make(name, frame_stack, action_repeat, max_episode_frames, truncate_episode_frames, seed, train=True):
     domain, task = name.split('_', 1)
     # overwrite cup to ball_in_cup
     domain = dict(cup='ball_in_cup').get(domain, domain)
@@ -37,12 +37,12 @@ def make(name, frame_stack, action_repeat, max_episode_len, truncate_episode_len
                              render_kwargs=render_kwargs)
     # stack several frames
     env = FrameStackWrapper(env, frame_stack, pixels_key)
-    if max_episode_len and action_repeat:
-        max_episode_len = max_episode_len // action_repeat
-    env = TimeLimit(env, max_episode_len=max_episode_len)
+    if max_episode_frames and action_repeat:
+        max_episode_frames = max_episode_frames // action_repeat
+    env = TimeLimit(env, max_episode_len=max_episode_frames)
     if train:
-        if truncate_episode_len and action_repeat:
-            truncate_episode_len = truncate_episode_len // action_repeat
-        env = TimeLimit(env, max_episode_len=truncate_episode_len, resume=True)
+        if truncate_episode_frames and action_repeat:
+            truncate_episode_frames = truncate_episode_frames // action_repeat
+        env = TimeLimit(env, max_episode_len=truncate_episode_frames, resume=True)
     env = ExtendedTimeStepWrapper(env)
     return env
