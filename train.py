@@ -60,7 +60,7 @@ class Workspace:
         elif self.cfg.envs.lower() == "brax":
             from envs import Brax as envs
         elif self.cfg.envs.lower() == "atari":
-            from envs import atari as envs
+            from envs import atari_recommended as envs
         else:
             assert False, 'Unsupported environment suite'
 

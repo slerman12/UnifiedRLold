@@ -131,6 +131,9 @@ class FrameStackWrapper(dm_env.Environment):
     def action_spec(self):
         return self._env.action_spec()
 
+    def close(self):
+        self.gym_env.close()
+
     def __getattr__(self, name):
         return getattr(self._env, name)
 
@@ -221,6 +224,9 @@ class TimeLimit(dm_env.Environment):
             # time_step = self._env.step(0)  # todo shouldn't take step, just return the current time_step
         return self.time_step
 
+    def close(self):
+        self.gym_env.close()
+
     def __getattr__(self, name):
         return getattr(self._env, name)
 
@@ -232,6 +238,9 @@ class ExtendedTimeStepWrapper(dm_env.Environment):
     def reset(self):
         time_step = self._env.reset()
         return self._augment_time_step(time_step)
+
+    def close(self):
+        self.gym_env.close()
 
     def step(self, action):
         time_step = self._env.step(action)

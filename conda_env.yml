@@ -32,3 +32,4 @@ dependencies:
       - opencv-python==4.5.3.56
       - PyOpenGL-accelerate
       - ale-py
+      - gym

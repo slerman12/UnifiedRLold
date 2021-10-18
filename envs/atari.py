@@ -264,6 +264,9 @@ class MaxAndSkipEnv(gym.Wrapper):
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)
 
+    def close(self):
+        self.gym_env.close()
+
 
 class ClipRewardEnv(gym.RewardWrapper):
     def __init__(self, env):
