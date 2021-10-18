@@ -64,11 +64,7 @@ class AtariPreprocessing(dm_env.Environment):
                                   minimum=0, maximum=255, name="observation")
 
     def action_spec(self):
-        return self._action_spec
-
-    @property
-    def action_space(self):
-        space = self.environment.action_space
+        space = self.gym_env.action_space
         if isinstance(space, gym.spaces.Discrete):
             return specs.Array(shape=[space.n],
                                dtype=space.dtype,
@@ -189,7 +185,7 @@ class AtariPreprocessing(dm_env.Environment):
 
 def make(env_id, frame_stack=4, action_repeat=1, max_episode_frames=27000, truncate_episode_frames=1000, seed=0,
          train=True):
-    env_id = f'ALE/{env_id.capitalize()}-v4'
+    env_id = f'{env_id.capitalize()}-v4'
     env = gym.make(env_id)
     env.seed(seed)
     env = AtariPreprocessing(env, frame_skip=action_repeat,
