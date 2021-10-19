@@ -33,3 +33,19 @@ dependencies:
       - PyOpenGL-accelerate
       - ale-py==0.7.2
       - gym==0.21.0
+
+#Atari
+#  pip install autorom[accept-rom-license]
+#-OR-
+#  pip install autorom
+#  AutoROM --accept-license
+#THEN:
+#  mkdir Atari_ROMS
+#  AutoROM --install-dir ./Atari_ROMS
+#  ale-import-roms ./ATARI_ROMS
+
+#MuJoCo
+#  mkdir ~/.mujoco
+#  Download mujoco from here: https://mujoco.org/download
+#  Unrar, unzip, and move folder into ~/.mujoco
+#  pip install git+https://github.com/deepmind/dm_control.git
