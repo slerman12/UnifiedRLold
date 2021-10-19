@@ -185,7 +185,7 @@ class AtariPreprocessing(dm_env.Environment):
 
 def make(env_id, frame_stack=4, action_repeat=1, max_episode_frames=27000, truncate_episode_frames=1000, seed=0,
          train=True):
-    env_id = f'ALE/{env_id.capitalize()}-v5'
+    env_id = f'ALE/{env_id}-v5'
     env = gym.make(env_id)
     env.seed(seed)
     env = AtariPreprocessing(env, frame_skip=action_repeat,
