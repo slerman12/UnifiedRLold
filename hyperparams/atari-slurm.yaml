@@ -2,7 +2,7 @@ defaults:
   - _self_
   #  - task@_global_: dmc/quadruped_walk
   #  - task@_global_: brax/brax_halfcheetah-v0
-  - task@_global_: atari/pong
+  - task@_global_: atari/breakou
   - override hydra/launcher: submitit_slurm
 
 
@@ -42,7 +42,7 @@ nstep: 10
 #batch_size: 256
 batch_size: 32
 # misc
-seed: 1
+seed: 1,2,3,4,5
 #device: cpu
 device: cuda
 save_video: true
@@ -98,7 +98,7 @@ hydra:
     mem_gb: 160
     nodes: 2
     partition: gpu
-    gres: gpu
+#    gres: gpu:4
     cpus_per_gpu: 16
     gpus_per_task: 1
     constraint: K80
