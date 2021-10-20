@@ -84,19 +84,19 @@ agent:
   prioritized_replay_beta0: 0.4
   prioritized_replay_beta_steps: ${num_train_frames}
 
-#hydra:
-#  run:
-#    dir: ./exp_local/${now:%Y.%m.%d}/${now:%H%M%S}_${hydra.job.override_dirname}
-#  sweep:
-#    dir: ./exp/${now:%Y.%m.%d}/${now:%H%M}_${agent_cfg.experiment}
-#    subdir: ${hydra.job.num}
-#  launcher:
-#    timeout_min: 4300
-##    cpus_per_task: 10
-#    cpus_per_task: 1
-##    gpus_per_node: 1
-#    gpus_per_node: 0
-#    tasks_per_node: 1
-#    mem_gb: 160
-#    nodes: 1
-#    submitit_folder: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${agent_cfg.experiment}/.slurm
+hydra:
+  run:
+    dir: ./exp_local/${now:%Y.%m.%d}/${now:%H%M%S}_${hydra.job.override_dirname}
+  sweep:
+    dir: ./exp/${now:%Y.%m.%d}/${now:%H%M}_${agent_cfg.experiment}
+    subdir: ${hydra.job.num}
+  launcher:
+    timeout_min: 4300
+#    cpus_per_task: 10
+    cpus_per_task: 1
+#    gpus_per_node: 1
+    gpus_per_node: 0
+    tasks_per_node: 1
+    mem_gb: 160
+    nodes: 1
+    submitit_folder: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${agent_cfg.experiment}/.slurm
