@@ -105,4 +105,3 @@ hydra:
 #    mem_per_gpu: null
 #    mem_per_cpu: null
     submitit_folder: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${agent_cfg.experiment}/.slurm
-    seed: 1,2,3,4,5
