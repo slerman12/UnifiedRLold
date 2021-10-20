@@ -3,7 +3,7 @@ defaults:
   #  - task@_global_: dmc/quadruped_walk
   #  - task@_global_: brax/brax_halfcheetah-v0
   - task@_global_: atari/pong
-  - override hydra/launcher: submitit_local
+  - override hydra/launcher: submitit_slurm
 
 
 # environments/domain
