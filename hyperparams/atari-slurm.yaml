@@ -98,7 +98,7 @@ hydra:
     mem_gb: 160
     nodes: 2
     partition: gpu
-    gres: gpu:4
+    gres: gpu
     cpus_per_gpu: 16
     gpus_per_task: 1
     constraint: K80
