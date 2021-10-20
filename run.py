@@ -2,7 +2,7 @@ import hydra
 from pathlib import Path
 
 
-@hydra.main(config_path='hyperparams', config_name='atari')
+@hydra.main(config_path='hyperparams', config_name='atari_drqdqn')
 def main(cfg):
     from train import Workspace as W
     root_dir = Path.cwd()

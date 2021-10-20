@@ -6,29 +6,35 @@ from blocks.networks import MLP
 
 class DoubleQCritic(nn.Module):
     """Critic network, employs clipped double Q learning."""
-    def __init__(self, repr_dim, action_shape, feature_dim, hidden_dim):
+    def __init__(self, repr_dim, action_shape, feature_dim, hidden_dim, discrete=False):
         super().__init__()
+        self.discrete = discrete
 
         self.trunk = nn.Sequential(nn.Linear(repr_dim, feature_dim),
                                    nn.LayerNorm(feature_dim), nn.Tanh())
 
+        if not discrete:
+            feature_dim = feature_dim + action_shape[-1]
+
         self.Q1 = nn.Sequential(
-            nn.Linear(feature_dim + action_shape[0], hidden_dim),
+            nn.Linear(feature_dim, hidden_dim),
             nn.ReLU(inplace=True), nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(inplace=True), nn.Linear(hidden_dim, 1))
+            nn.ReLU(inplace=True), nn.Linear(hidden_dim, action_shape[-1] if discrete else 1))
 
         self.Q2 = nn.Sequential(
-            nn.Linear(feature_dim + action_shape[0], hidden_dim),
+            nn.Linear(feature_dim, hidden_dim),
             nn.ReLU(inplace=True), nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(inplace=True), nn.Linear(hidden_dim, 1))
+            nn.ReLU(inplace=True), nn.Linear(hidden_dim, action_shape[-1] if discrete else 1))
 
         self.apply(utils.weight_init)
 
-    def forward(self, obs, action):
+    def forward(self, obs, action=None):
         h = self.trunk(obs)
-        h_action = torch.cat([h, action], dim=-1)
-        q1 = self.Q1(h_action)
-        q2 = self.Q2(h_action)
+        if not self.discrete:
+            assert action is not None
+            h = torch.cat([h, action], dim=-1)
+        q1 = self.Q1(h)
+        q2 = self.Q2(h)
 
         return q1, q2
 

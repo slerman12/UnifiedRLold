@@ -4,20 +4,20 @@
 # LICENSE file in the root directory of this source tree.
 import torch
 import torch.nn.functional as F
+from torch.distributions import Categorical, Uniform
 
 import utils
 
-from blocks.augmentations import RandomShiftsAug
+from blocks.augmentations import RandomShiftsAug, Intensity
 from blocks.encoders import Encoder
-from blocks.actors import Actor
 from blocks.critics import DoubleQCritic
 
 
-class DrQV2Agent:
-    def __init__(self, obs_shape, action_shape, discrete, device, lr, feature_dim,
+class DrQV2DQNAgent:
+    def __init__(self, obs_shape, action_shape, device, lr, feature_dim,
                  hidden_dim, critic_target_tau, num_expl_steps,
-                 update_every_steps, stddev_schedule, stddev_clip, use_tb):
-        self.discrete = discrete
+                 update_every_steps, stddev_schedule, stddev_clip, use_tb, discrete=True):
+        # self.discrete = discrete
         self.device = device
         self.critic_target_tau = critic_target_tau
         self.update_every_steps = update_every_steps
@@ -28,22 +28,23 @@ class DrQV2Agent:
 
         # models
         self.encoder = Encoder(obs_shape).to(device)
-        self.actor = Actor(self.encoder.repr_dim, action_shape, feature_dim,
-                           hidden_dim).to(device)
+        # self.actor = Actor(self.encoder.repr_dim, action_shape, feature_dim,
+        #                    hidden_dim).to(device)
 
         self.critic = DoubleQCritic(self.encoder.repr_dim, action_shape, feature_dim,
-                                    hidden_dim).to(device)
+                                    hidden_dim, discrete=True).to(device)
         self.critic_target = DoubleQCritic(self.encoder.repr_dim, action_shape,
-                                           feature_dim, hidden_dim).to(device)
+                                           feature_dim, hidden_dim, discrete=True).to(device)
         self.critic_target.load_state_dict(self.critic.state_dict())
 
         # optimizers
         self.encoder_opt = torch.optim.Adam(self.encoder.parameters(), lr=lr)
-        self.actor_opt = torch.optim.Adam(self.actor.parameters(), lr=lr)
+        # self.actor_opt = torch.optim.Adam(self.actor.parameters(), lr=lr)
         self.critic_opt = torch.optim.Adam(self.critic.parameters(), lr=lr)
 
         # data augmentation
-        self.aug = RandomShiftsAug(pad=4)
+        # self.aug = RandomShiftsAug(pad=4)
+        self.aug = Intensity(scale=0.05)
 
         self.train()
         self.critic_target.train()
@@ -51,34 +52,34 @@ class DrQV2Agent:
     def train(self, training=True):
         self.training = training
         self.encoder.train(training)
-        self.actor.train(training)
+        # self.actor.train(training)
         self.critic.train(training)
 
     def act(self, obs, step, eval_mode):
         obs = torch.as_tensor(obs, device=self.device)
         obs = self.encoder(obs.unsqueeze(0))
-        stddev = utils.schedule(self.stddev_schedule, step)
-        dist = self.actor(obs, stddev)
+        Q1, Q2 = self.critic(obs)
+        Q = torch.min(Q1, Q2)
         if eval_mode:
-            action = dist.mean
+            action = torch.argmax(Q, dim=-1)
         else:
-            action = dist.sample(clip=None)
+            # temp = utils.schedule(self.stddev_schedule, step)  # todo decreasing temp
+            temp = 1
+            temp = max(1, 1.5 * 0.99 ** step)  # todo learnable temp like in sac
+            action = Categorical(logits=Q / temp).sample()
             if step < self.num_expl_steps:
-                action.uniform_(-1.0, 1.0)
-        # continuous vs discrete
-        if self.discrete:
-            return torch.argmax(action, dim=-1).cpu().numpy()[0]
-        else:
-            return action.cpu().numpy()[0]
+                action = torch.randint_like(action, 0, Q.shape[-1])
+        return action.cpu().numpy()[0]
 
     def update_critic(self, obs, action, reward, discount, next_obs, step):
         metrics = dict()
 
         with torch.no_grad():
-            stddev = utils.schedule(self.stddev_schedule, step)
-            dist = self.actor(next_obs, stddev)
-            next_action = dist.sample(clip=self.stddev_clip)
-            target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
+            # stddev = utils.schedule(self.stddev_schedule, step)
+            # dist = self.actor(next_obs, stddev)
+            # next_action = dist.sample(clip=self.stddev_clip)
+            # target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
+            target_Q1, target_Q2 = self.critic_target(next_obs)
             target_V = torch.min(target_Q1, target_Q2)
             target_Q = reward + (discount * target_V)
 
@@ -100,29 +101,29 @@ class DrQV2Agent:
 
         return metrics
 
-    def update_actor(self, obs, step):
-        metrics = dict()
-
-        stddev = utils.schedule(self.stddev_schedule, step)
-        dist = self.actor(obs, stddev)
-        action = dist.sample(clip=self.stddev_clip)
-        log_prob = dist.log_prob(action).sum(-1, keepdim=True)
-        Q1, Q2 = self.critic(obs, action)
-        Q = torch.min(Q1, Q2)
-
-        actor_loss = -Q.mean()
-
-        # optimize actor
-        self.actor_opt.zero_grad(set_to_none=True)
-        actor_loss.backward()
-        self.actor_opt.step()
-
-        if self.use_tb:
-            metrics['actor_loss'] = actor_loss.item()
-            metrics['actor_logprob'] = log_prob.mean().item()
-            metrics['actor_ent'] = dist.entropy().sum(dim=-1).mean().item()
-
-        return metrics
+    # def update_actor(self, obs, step):
+    #     metrics = dict()
+    #
+    #     stddev = utils.schedule(self.stddev_schedule, step)
+    #     dist = self.actor(obs, stddev)
+    #     action = dist.sample(clip=self.stddev_clip)
+    #     log_prob = dist.log_prob(action).sum(-1, keepdim=True)
+    #     Q1, Q2 = self.critic(obs, action)
+    #     Q = torch.min(Q1, Q2)
+    #
+    #     actor_loss = -Q.mean()
+    #
+    #     # optimize actor
+    #     self.actor_opt.zero_grad(set_to_none=True)
+    #     actor_loss.backward()
+    #     self.actor_opt.step()
+    #
+    #     if self.use_tb:
+    #         metrics['actor_loss'] = actor_loss.item()
+    #         metrics['actor_logprob'] = log_prob.mean().item()
+    #         metrics['actor_ent'] = dist.entropy().sum(dim=-1).mean().item()
+    #
+    #     return metrics
 
     def update(self, replay_iter, step):
         metrics = dict()
@@ -149,7 +150,7 @@ class DrQV2Agent:
             self.update_critic(obs, action, reward, discount, next_obs, step))
 
         # update actor
-        metrics.update(self.update_actor(obs.detach(), step))
+        # metrics.update(self.update_actor(obs.detach(), step))
 
         # update critic target
         utils.soft_update_params(self.critic, self.critic_target,

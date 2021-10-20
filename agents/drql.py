@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.distributions import Categorical
 
 import utils
 
@@ -65,8 +66,13 @@ class DRQLAgent(object):
 
         obs = torch.as_tensor(obs, device=self.device)
         obs = self.encoder(obs.unsqueeze(0))
-        q = self.critic(obs)
-        action = q.max(dim=-1)[1]
+        Q = self.critic(obs)
+        if eval_mode or True:  # todo test for real delete "or True")
+            action = Q.max(dim=-1)[1]
+        else:
+            # temp = utils.schedule(self.stddev_schedule, step)  # todo decreasing temp
+            temp = 1
+            action = Categorical(logits=Q / temp).sample()
 
         if step < self.num_expl_steps and np.random.rand() < eps:
             action = torch.randint(low=0, high=self.num_actions, size=action.shape)
