@@ -42,7 +42,7 @@ nstep: 10
 #batch_size: 256
 batch_size: 32
 # misc
-seed: 1,2,3,4,5
+seed: 1
 #device: cpu
 device: cuda
 save_video: true
@@ -105,3 +105,4 @@ hydra:
 #    mem_per_gpu: null
 #    mem_per_cpu: null
     submitit_folder: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${agent_cfg.experiment}/.slurm
+    seed: 1,2,3,4,5
