@@ -88,7 +88,7 @@ hydra:
   run:
     dir: ./exp_local/${now:%Y.%m.%d}/${now:%H%M%S}_${hydra.job.override_dirname}
   sweep:
-    dir: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${agent._target_}_${experiment}
+    dir: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${experiment}
     subdir: ${hydra.job.num}
   launcher:
     timeout_min: 4300
@@ -104,4 +104,4 @@ hydra:
     constraint: K80
 #    mem_per_gpu: null
 #    mem_per_cpu: null
-    submitit_folder: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${agent._target_}_${experiment}/.slurm
+    submitit_folder: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${experiment}/.slurm
