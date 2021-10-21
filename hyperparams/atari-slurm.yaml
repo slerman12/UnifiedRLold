@@ -104,4 +104,4 @@ hydra:
     constraint: K80
 #    mem_per_gpu: null
 #    mem_per_cpu: null
-    submitit_folder: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${agent_cfg.experiment}/.slurm
+    submitit_folder: ./exp/${now:%Y.%m.%d}/${now:%H%M%S}_${agent._target_}_${experiment}/.slurm
