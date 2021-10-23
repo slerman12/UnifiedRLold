@@ -1,6 +1,7 @@
 #!/bin/sh
 #module load python3/3.8.3
 seed=$1
+echo $seed
 for game in "alien" "amidar" "assault" "asterix" "bankheist" "battlezone" "boxing" "breakout" "choppercommand" "crazyclimber" "demonattack" "freeway" "frostbite" "gopher" "hero" "jamesbond" "kangaroo" "krull" "kungfumaster" "mspacman" "pong" "privateeye" "qbert" "roadrunner" "seaquest" "upndown"
 #for game in "alien" "amidar" "assault" "asterix" "bank_heist" "boxing" "breakout" "chopper_command"
 #for game in "breakout"
