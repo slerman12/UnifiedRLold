@@ -26,7 +26,7 @@ def slurm_script_generalized():
 #SBATCH -t 5-00:00:00 -o ./{}.log -J {}
 #SBATCH --mem=25gb 
 {}
-conda /scratch/slerman/miniconda/bin/activate agi
+source /scratch/slerman/miniconda/bin/activate agi
 python3 {} {}
 """.format("-c 1" if args.cpu else "-p gpu -c 4",
            "" if args.cpu else "#SBATCH --gres=gpu",
