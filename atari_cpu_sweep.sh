@@ -6,5 +6,5 @@ for game in "alien" "amidar" "assault" "asterix" "bankheist" "battlezone" "boxin
 #for game in "breakout"
 do
 	python3 sbatch.py --bigger-gpu --name $game$seed --params "--config-name atari task=atari/$game seed=$seed experiment=$game$seed"
-	sleep 5
+	sleep 7
 done
