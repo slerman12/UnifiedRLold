@@ -31,6 +31,51 @@ class Actor(nn.Module):
         return dist
 
 
+class DoublePropMB(nn.Module):
+    def __init__(self, repr_dim, feature_dim, hidden_dim):
+        super().__init__()
+
+        self.trunk = nn.Sequential(nn.Linear(repr_dim, feature_dim),
+                                   nn.LayerNorm(feature_dim), nn.Tanh())
+
+        self.M1 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
+                                    nn.ReLU(inplace=True),
+                                    nn.Linear(hidden_dim, hidden_dim),
+                                    nn.ReLU(inplace=True),
+                                    nn.Linear(hidden_dim, 1))
+
+        self.B1 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
+                               nn.ReLU(inplace=True),
+                               nn.Linear(hidden_dim, hidden_dim),
+                               nn.ReLU(inplace=True),
+                               nn.Linear(hidden_dim, 1))
+
+        self.M2 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
+                               nn.ReLU(inplace=True),
+                               nn.Linear(hidden_dim, hidden_dim),
+                               nn.ReLU(inplace=True),
+                               nn.Linear(hidden_dim, 1))
+
+        self.B2 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
+                               nn.ReLU(inplace=True),
+                               nn.Linear(hidden_dim, hidden_dim),
+                               nn.ReLU(inplace=True),
+                               nn.Linear(hidden_dim, 1))
+
+        self.apply(utils.weight_init)
+
+    def forward(self, obs):
+        h = self.trunk(obs)
+
+        m1 = torch.abs(self.M1(h)) + 0.001
+        # b1 = torch.abs(self.B1(h)) + 0.001
+        b1 = self.B1(h)
+        m2 = torch.abs(self.M2(h)) + 0.001
+        # b2 = torch.abs(self.B2(h)) + 0.001
+        b2 = self.B2(h)
+        return m1, b1, m2, b2
+
+
 class DiagGaussianActor(nn.Module):
     """torch.distributions implementation of an diagonal Gaussian policy."""
     def __init__(self, obs_dim, action_dim, hidden_dim, hidden_depth,
