@@ -5,7 +5,7 @@ for game in "alien" "amidar" "assault" "asterix" "bank_heist" "battle_zone" "box
 #for game in "alien" "amidar" "assault" "asterix" "bank_heist" "boxing" "breakout" "chopper_command"
 #for game in "breakout"
 do
-  conda /scratch/slerman/miniconda/bin/activate agi
+  source /scratch/slerman/miniconda/bin/activate agi
 	python3 sbatch.py --bigger-gpu --name $game$seed --params "--config-name atari task=atari/$game seed=$seed experiment=$game$seed"
 	sleep 3
 done
