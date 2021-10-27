@@ -116,6 +116,7 @@ for name in results:
     envs = sorted(results[name].keys())
     mean_per_env = {}
     human_norm = {}
+    atari = False
     for env in envs:
         # consistency assertions and missing data checks
         if num_seeds_per_env is None:
@@ -146,11 +147,15 @@ for name in results:
         std_reward = round(np.std(reward), 1)
         print(f'{env}: {mean_reward} ± {std_reward}')
         mean_per_env[env] = mean_reward
-        human_norm[env] = (mean_per_env[env] - RANDOM_SCORES[env])/(HUMAN_SCORES[env] - RANDOM_SCORES[env])
-    mean_human_norm = np.mean(human_norm[key] for key in human_norm)
+        if env in RANDOM_SCORES:
+            atari = True
+            human_norm[env] = (mean_per_env[env] - RANDOM_SCORES[env])/(HUMAN_SCORES[env] - RANDOM_SCORES[env])
+    if atari:
+        mean_human_norm = np.mean(human_norm[key] for key in human_norm)
     mean = np.mean(mean_per_env[key] for key in mean_per_env)
     median = np.median(mean_per_env[key] for key in mean_per_env)
-    print(f'Human Normalized: {mean_human_norm}')
+    if atari:
+        print(f'Human Normalized: {mean_human_norm}')
     print(f'Mean: {mean}')
     print(f'Median: {median}')
     print()
