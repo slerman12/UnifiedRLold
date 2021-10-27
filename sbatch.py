@@ -16,7 +16,6 @@ parser.add_argument('--biggest-gpu', action='store_true', default=False,
                     help='uses V100 GPU')
 parser.add_argument('--file', type=str, default="run.py")
 parser.add_argument('--params', type=str, default="task=atari/ms_pacman")
-parser.add_argument('--module', type=str, default="python3/3.8.3")
 args = parser.parse_args()
 
 
