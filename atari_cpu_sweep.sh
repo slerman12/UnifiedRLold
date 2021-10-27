@@ -9,5 +9,5 @@ for game in "alien" "amidar" "assault" "asterix" "bankheist" "battlezone" "boxin
 do
   echo "queueing seed $seed game $game..."
 	python3 sbatch.py --bigger-gpu --name $game$seed --params "--config-name atari task=atari/$game seed=$seed experiment=$experiment"
-	sleep 1
+#	sleep 1
 done
