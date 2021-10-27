@@ -43,7 +43,7 @@ with open("sbatch_script", "w") as file:
 success = "error"
 while "error" in success:
     success = str(subprocess.check_output(['sbatch {}'.format("sbatch_script")], shell=True))
-    print(success[1:][:-2])
+    print(success[2:][:-3])
     if "error" in success:
         print("Errored... trying again")
 print("Success!")
