@@ -56,7 +56,7 @@ for name in results:
             num_seeds_per_env = len(results[name][env])
             num_evals = results[name][env][1]["eval"].shape[0]
             num_frames = results[name][env][1]["eval"]["frame"].iloc[-1]
-            print(f'{num_seeds_per_env} seeds, {num_frames} frames:\n')
+            print(f'{num_seeds_per_env} seeds, {num_frames} frames:')
         asrt = len(results[name][env]) == num_seeds_per_env
         msg = f'missing seeds for {env}. counted {len(results[name][env])} instead of {num_seeds_per_env}'
         # assert asrt, msg
@@ -79,6 +79,7 @@ for name in results:
         mean_reward = round(np.mean(reward), 1)
         std_reward = round(np.std(reward), 1)
         print(f'{env}: {mean_reward} ± {std_reward}')
+    print()
 
 # import pandas as pd
 # import numpy as np

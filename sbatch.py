@@ -43,9 +43,14 @@ with open("sbatch_script", "w") as file:
     file.write(slurm_script_generalized())
 success = "error"
 while "error" in success:
-    success = str(subprocess.check_output(['sbatch {}'.format("sbatch_script")], shell=True))
-    print(success[2:][:-3])
-    if "error" in success:
-        print("Errored... trying again")
+    try:
+        success = str(subprocess.check_output(['sbatch {}'.format("sbatch_script")], shell=True))
+        print(success[2:][:-3])
+        if "error" in success:
+            print("Errored... trying again")
+    except:
+        success = "error"
+        if "error" in success:
+            print("Errored... trying again")
 print("Success!")
 # out = check_output(["ntpq", "-p"])
