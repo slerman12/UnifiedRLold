@@ -52,7 +52,8 @@ for exp in exps:
 for name in results:
     print(f'experiment: {name}')
     num_seeds_per_env = None
-    for env in results[name]:
+    envs = sorted(results[name].keys())
+    for env in envs:
         # consistency assertions and missing data checks
         if num_seeds_per_env is None:
             num_seeds_per_env = len(results[name][env])
