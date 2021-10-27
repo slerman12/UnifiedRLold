@@ -67,10 +67,10 @@ class DoublePropMB(nn.Module):
     def forward(self, obs):
         h = self.trunk(obs)
 
-        m1 = torch.abs(self.M1(h)) + 0.001
+        m1 = self.M1(h) + 0.001
         # b1 = torch.abs(self.B1(h)) + 0.001
         b1 = self.B1(h)
-        m2 = torch.abs(self.M2(h)) + 0.001
+        m2 = self.M2(h) + 0.001
         # b2 = torch.abs(self.B2(h)) + 0.001
         b2 = self.B2(h)
         return m1, b1, m2, b2

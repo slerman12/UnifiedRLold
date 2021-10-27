@@ -150,6 +150,7 @@ class Workspace:
         metrics = None
         while train_until_step(self.global_step):
             if time_step.last():
+                # print(episode_step, "metric?")
                 self._global_episode += 1
                 self.train_video_recorder.save(f'{self.global_frame}.mp4')
                 # wait until all the metrics schema is populated
@@ -178,7 +179,7 @@ class Workspace:
                 episode_reward = 0
 
             # try to evaluate
-            if eval_every_step(self.global_step) or self.global_step == 0:
+            if eval_every_step(self.global_step) or self.global_step == 0 or train_until_step(self.global_step + 1):
                 self.logger.log('eval_total_time', self.timer.total_time(),
                                 self.global_frame)
                 self.eval()
@@ -211,7 +212,7 @@ class Workspace:
             episode_reward += time_step.reward
             store_it = time_step.last() and episode_step >= self.cfg.nstep
             # if store_it:
-            #     print("store_it True")
+            #     print(episode_step)
             self.replay_storage.add(time_step, store_trace=store_it)
             # print(store_it,
             #       len(self.replay_loader),

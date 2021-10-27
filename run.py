@@ -3,7 +3,7 @@ from pathlib import Path
 from omegaconf import DictConfig
 
 
-@hydra.main(config_path='hyperparams', config_name='atari_drqdqn')
+@hydra.main(config_path='hyperparams', config_name='atari')
 def main(cfg: DictConfig) -> None:
     from train import Workspace as W
     root_dir = Path.cwd()
