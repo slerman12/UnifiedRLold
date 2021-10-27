@@ -6,8 +6,8 @@ import numpy as np
 root = "./exp_local"
 
 exps = []
-for exps_by_date in sorted(glob.glob(root + "/*/"))[-2:]:
-# for exps_by_date in sorted(glob.glob(root + "/*/")):
+# for exps_by_date in sorted(glob.glob(root + "/*/"))[-2:]:
+for exps_by_date in sorted(glob.glob(root + "/*/")):
     exps = exps + glob.glob(exps_by_date + "/*/")
 exps = sorted(exps)
 
@@ -17,7 +17,7 @@ for exp in exps:
     if "seed=" not in exp or "experiment=" not in exp:
         continue
     name = exp.split("experiment=", 1)[1].split(",", 1)[0]
-    name = "bla"
+    # name = "bla"
     seed = int(exp.split("seed=", 1)[1].split(",", 1)[0])
     env = glob.glob(exp + "/*")[0].split("/")[-1]
 
