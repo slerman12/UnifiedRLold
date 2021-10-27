@@ -80,3 +80,40 @@ for name in results:
         std_reward = round(np.std(reward), 1)
         print(f'{env}: {mean_reward} ± {std_reward}')
 
+# import pandas as pd
+# import numpy as np
+# import scipy as sp
+# import glob
+# import os
+# from omegaconf import OmegaConf
+#
+# import matplotlib.pyplot as plt
+# from matplotlib import cm
+# plt.style.use('bmh')
+# import seaborn as sns
+# plt.rcParams['figure.dpi'] = 400
+# plt.rcParams['font.size'] = 8
+# plt.rcParams['legend.fontsize'] = 7
+# plt.rcParams['legend.loc'] = 'lower right'
+#
+#
+# def plot(df, key='episode_reward'):
+#     envs = np.sort(df.env.unique())
+#     ncol = 3
+#     assert envs.shape[0] % ncol == 0
+#     nrow = envs.shape[0] // ncol
+#     fig, axs = plt.subplots(nrow, ncol, figsize=(4 * ncol, 3 * nrow))
+#
+#     for idx, env in enumerate(envs):
+#         data = df[df['env'] == env]
+#         row = idx // ncol
+#         col = idx % ncol
+#         ax = axs[row, col]
+#         hue_order = np.sort(data.Agent.unique())
+#         sns.lineplot(x='step', y=key, data=data, ci='sd', hue='Agent', hue_order=hue_order, ax=ax)
+#         ax.set_title(f'{env}')
+#     plt.tight_layout()
+#     plt.show()
+#
+# # df = pd.read_csv('sac.csv')
+# # plot(df)
