@@ -48,6 +48,7 @@ for exp in exps:
     #     lines = f.readlines()
 
 for name in results:
+    print(f'experiment: {name}')
     num_seeds_per_env = None
     for env in results[name]:
         # consistency assertions and missing data checks
