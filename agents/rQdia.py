@@ -28,7 +28,7 @@ class rQdiaAgent(DrQV2Agent):
         # rQdia (Regularizing Q-Value Distributions With Image Augmentation)
 
         obs_orig_pairs = obs_orig.unsqueeze(1).expand(-1, action.shape[0], -1).reshape(-1, obs.shape[1])
-        obs_pairs = obs.unsqueeze(1).expand_as(-1, action.shape[0], -1).reshape(obs_orig_pairs.shape)
+        obs_pairs = obs.unsqueeze(1).expand_as([-1, action.shape[0], -1]).reshape(obs_orig_pairs.shape)
         action_pairs = action.unsqueeze(0).expand(action.shape[0], -1, -1).reshape(-1, action.shape[1])
 
         # Q dists
