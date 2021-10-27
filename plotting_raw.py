@@ -19,33 +19,35 @@ for exp in exps:
     name = exp.split("experiment=", 1)[1].split(",", 1)[0]
     # name = "bla"
     seed = int(exp.split("seed=", 1)[1].split(",", 1)[0])
-    env = glob.glob(exp + "/*")[0].split("/")[-1]
 
-    try:
-        train = pd.read_csv(exp + f'{env}/train.csv')
-        eval = pd.read_csv(exp + f'{env}/eval.csv')
-    except:
-        continue
+    for env in glob.glob(exp + "/*"):
+        env = env.split("/")[-1]
 
-    if name not in results:
-        results[name] = {}
+        try:
+            train = pd.read_csv(exp + f'{env}/train.csv')
+            eval = pd.read_csv(exp + f'{env}/eval.csv')
+        except:
+            continue
 
-    if env not in results[name]:
-        results[name][env] = {}
+        if name not in results:
+            results[name] = {}
 
-    # dict of envs, each has dict of seeds, each has train csv and eval csv
-    results[name][env].update({seed: {"train": train, "eval": eval}})
+        if env not in results[name]:
+            results[name][env] = {}
 
-    # train.plot(x="frame", y="episode_reward", legend=None)
-    # plt.xlabel('Frame')
-    # plt.ylabel('Reward')
-    # plt.title(env.capitalize())
-    # plt.show()
-    # break
+        # dict of envs, each has dict of seeds, each has train csv and eval csv
+        results[name][env].update({seed: {"train": train, "eval": eval}})
+
+        # train.plot(x="frame", y="episode_reward", legend=None)
+        # plt.xlabel('Frame')
+        # plt.ylabel('Reward')
+        # plt.title(env.capitalize())
+        # plt.show()
+        # break
 
 
-    # with open(file) as f:
-    #     lines = f.readlines()
+        # with open(file) as f:
+        #     lines = f.readlines()
 
 for name in results:
     print(f'experiment: {name}')
