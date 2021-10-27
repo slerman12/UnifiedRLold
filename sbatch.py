@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+from subprocess import check_output
 
 
 # Arguments
@@ -40,3 +41,4 @@ python3 {} {}
 with open("sbatch_script", "w") as file:
     file.write(slurm_script_generalized())
 subprocess.call(['sbatch {}'.format("sbatch_script")], shell=True)
+# out = check_output(["ntpq", "-p"])
