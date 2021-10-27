@@ -179,7 +179,7 @@ class Workspace:
                 episode_reward = 0
 
             # try to evaluate
-            if eval_every_step(self.global_step) or self.global_step == 0 or train_until_step(self.global_step + 1):
+            if eval_every_step(self.global_step) or self.global_step == 0 or not train_until_step(self.global_step + 1):
                 self.logger.log('eval_total_time', self.timer.total_time(),
                                 self.global_frame)
                 self.eval()
