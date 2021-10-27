@@ -49,10 +49,73 @@ for exp in exps:
         # with open(file) as f:
         #     lines = f.readlines()
 
+
+RANDOM_SCORES = {
+    'Alien': 227.8,
+    'Amidar': 5.8,
+    'Assault': 222.4,
+    'Asterix': 210.0,
+    'BankHeist': 14.2,
+    'BattleZone': 2360.0,
+    'Boxing': 0.1,
+    'Breakout': 1.7,
+    'ChopperCommand': 811.0,
+    'CrazyClimber': 10780.5,
+    'DemonAttack': 152.1,
+    'Freeway': 0.0,
+    'Frostbite': 65.2,
+    'Gopher': 257.6,
+    'Hero': 1027.0,
+    'Jamesbond': 29.0,
+    'Kangaroo': 52.0,
+    'Krull': 1598.0,
+    'KungFuMaster': 258.5,
+    'MsPacman': 307.3,
+    'Pong': -20.7,
+    'PrivateEye': 24.9,
+    'Qbert': 163.9,
+    'RoadRunner': 11.5,
+    'Seaquest': 68.4,
+    'UpNDown': 533.4
+}
+RANDOM_SCORES = {key.lower(): RANDOM_SCORES[key] for key in RANDOM_SCORES}
+
+HUMAN_SCORES = {
+    'Alien': 7127.7,
+    'Amidar': 1719.5,
+    'Assault': 742.0,
+    'Asterix': 8503.3,
+    'BankHeist': 753.1,
+    'BattleZone': 37187.5,
+    'Boxing': 12.1,
+    'Breakout': 30.5,
+    'ChopperCommand': 7387.8,
+    'CrazyClimber': 35829.4,
+    'DemonAttack': 1971.0,
+    'Freeway': 29.6,
+    'Frostbite': 4334.7,
+    'Gopher': 2412.5,
+    'Hero': 30826.4,
+    'Jamesbond': 302.8,
+    'Kangaroo': 3035.0,
+    'Krull': 2665.5,
+    'KungFuMaster': 22736.3,
+    'MsPacman': 6951.6,
+    'Pong': 14.6,
+    'PrivateEye': 69571.3,
+    'Qbert': 13455.0,
+    'RoadRunner': 7845.0,
+    'Seaquest': 42054.7,
+    'UpNDown': 11693.2
+}
+HUMAN_SCORES = {key.lower(): HUMAN_SCORES[key] for key in HUMAN_SCORES}
+
 for name in results:
     print(f'experiment: {name}')
     num_seeds_per_env = None
     envs = sorted(results[name].keys())
+    mean_per_env = {}
+    human_norm = {}
     for env in envs:
         # consistency assertions and missing data checks
         if num_seeds_per_env is None:
@@ -82,6 +145,14 @@ for name in results:
         mean_reward = round(np.mean(reward), 1)
         std_reward = round(np.std(reward), 1)
         print(f'{env}: {mean_reward} ± {std_reward}')
+        mean_per_env[env] = mean_reward
+        human_norm[env] = (mean_per_env[env] - RANDOM_SCORES[env])/(HUMAN_SCORES[env] - RANDOM_SCORES[env])
+    mean_human_norm = np.mean(human_norm[key] for key in human_norm)
+    mean = np.mean(mean_per_env[key] for key in mean_per_env)
+    median = np.median(mean_per_env[key] for key in mean_per_env)
+    print(f'Human Normalized: {mean_human_norm}')
+    print(f'Mean: {mean}')
+    print(f'Median: {median}')
     print()
 
 # import pandas as pd
