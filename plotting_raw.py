@@ -152,10 +152,12 @@ for name in results:
             human_norm[env] = (mean_per_env[env] - RANDOM_SCORES[env])/(HUMAN_SCORES[env] - RANDOM_SCORES[env])
     if atari:
         mean_human_norm = np.mean([human_norm[key] for key in human_norm])
+        med_human_norm = np.median([human_norm[key] for key in human_norm])
     mean = np.mean([mean_per_env[key] for key in mean_per_env])
     median = np.median([mean_per_env[key] for key in mean_per_env])
     if atari:
-        print(f'Human Normalized: {mean_human_norm}')
+        print(f'Mean Human Normalized: {mean_human_norm}')
+        print(f'Median Human Normalized: {med_human_norm}')
     print(f'Mean: {mean}')
     print(f'Median: {median}')
     print()
