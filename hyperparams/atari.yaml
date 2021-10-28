@@ -15,12 +15,12 @@ action_repeat: 4
 #terminal_on_life_loss: true  # true by default
 discount: 0.99
 # train settings
-num_train_frames:  1000001
+num_train_frames:  1000004
 num_seed_frames: 1600  # should be >= replay_buffer_num_workers * truncate_episode_len
 #num_seed_frames: 4004  # should be >= replay_buffer_num_workers * truncate_episode_len + action_repeat ?
 #num_seed_frames: 12000
 #num_exploration_steps: 5000
-max_episode_frames: 27000  # must be > update_every_steps, >= nstep - 1
+max_episode_frames: none  # must be > update_every_steps, >= nstep - 1
 truncate_episode_frames: 400
 #truncate_episode_len: false
 # eval

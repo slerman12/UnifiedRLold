@@ -192,10 +192,10 @@ def make(env_id, frame_stack=4, action_repeat=1, max_episode_frames=27000, trunc
                              terminal_on_life_loss=False, screen_size=84)
     env = FrameStackWrapper(env, frame_stack)
     env = ActionDTypeWrapper(env, np.int64, discrete=True)
-    if max_episode_frames and action_repeat:
-        max_episode_frames = max_episode_frames // action_repeat
-    env = TimeLimit(env, max_episode_len=max_episode_frames)
     if train:
+        if max_episode_frames and action_repeat:
+            max_episode_frames = max_episode_frames // action_repeat
+        env = TimeLimit(env, max_episode_len=max_episode_frames)
         if truncate_episode_frames and action_repeat:
             truncate_episode_frames = truncate_episode_frames // action_repeat
         env = TimeLimit(env, max_episode_len=truncate_episode_frames, resume=True)
