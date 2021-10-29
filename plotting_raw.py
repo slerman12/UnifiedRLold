@@ -18,7 +18,7 @@ for exp in exps:
         continue
     name = exp.split("experiment=", 1)[1].split(",", 1)[0]
     # name = "bla"
-    seed = int(exp.split("seed=", 1)[1].split(",", 1)[0])
+    seed = int(exp.split("seed=", 1)[1].split(",", 1)[0]) if "seed=" in exp else 1
 
     for env in glob.glob(exp + "/*"):
         env = env.split("/")[-1]
