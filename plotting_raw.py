@@ -14,7 +14,7 @@ exps = sorted(exps)
 results = {}
 
 for exp in exps:
-    if "seed=" not in exp or "experiment=" not in exp:
+    if "experiment=" not in exp:
         continue
     name = exp.split("experiment=", 1)[1].split(",", 1)[0]
     # name = "bla"
