@@ -8,6 +8,6 @@ for game in "humanoid_walk" "humanoid_run" "humanoid_stand"
 #for game in "breakout"
 do
   echo "queueing seed $seed task $game..."
-	python3 sbatch.py --bigger-gpu --name $game$seed --params "--config-name dmc task=dmc/$game seed=$seed experiment=$experiment agent._target_=agents.rQdiaAgent" --num-cpus 10
+	python3 sbatch.py --bigger-gpu --name $game$seed --params "--config-name dmc task=dmc/$game seed=$seed experiment=$experiment agent._target_=agents.rQdiaAgent" --num-cpus 10 --mem 100
 #	sleep 1
 done
