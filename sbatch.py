@@ -33,7 +33,6 @@ def slurm_script_generalized():
 {}
 
 source /scratch/slerman/miniconda/bin/activate agi
-module load cuda/9.2
 python3 {} {}
 """.format("-c {}".format(args.num_cpus) if args.cpu else "-p gpu -c {}".format(args.num_cpus),
            "" if args.cpu else "#SBATCH --gres=gpu",
