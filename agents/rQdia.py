@@ -27,7 +27,7 @@ class rQdiaAgent(DrQV2Agent):
 
         # rQdia (Regularizing Q-Value Distributions With Image Augmentation)
 
-        scaling = 0.25  # lower = more efficient
+        scaling = 0.15  # lower = more efficient
         num_actions = round(action.shape[0] * scaling)
 
         obs_orig_pairs = obs_orig.unsqueeze(1).expand(-1, num_actions, -1).reshape(-1, obs.shape[1])
