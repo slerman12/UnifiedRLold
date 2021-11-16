@@ -19,7 +19,7 @@ max_episode_frames: false
 truncate_episode_frames: false
 #max_episode_len: 27000
 # eval
-eval_every_frames: 100000
+eval_every_frames: 10000
 num_eval_episodes: 10
 #num_eval_episodes: 1
 # snapshot

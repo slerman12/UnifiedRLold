@@ -20,7 +20,7 @@ class Actor(nn.Module):
 
         self.apply(utils.weight_init)
 
-    def forward(self, obs, std):
+    def forward(self, obs, std=0):
         h = self.trunk(obs)
 
         mu = self.policy(h)
