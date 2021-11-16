@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 import torch.nn.functional as F
 
@@ -17,7 +18,8 @@ class MLP(nn.Module):
             mods.append(output_mod)
         self.trunk = nn.Sequential(*mods)
 
-    def forward(self, x):
+    def forward(self, *x):
+        x = torch.cat(x, dim=-1)
         return self.trunk(x)
 
 

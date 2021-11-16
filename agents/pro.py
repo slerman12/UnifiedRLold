@@ -166,7 +166,7 @@ class PROAgent:
             return metrics
 
         batch = next(replay_iter)
-        obs, action, reward, discount, next_obs = utils.to_torch(
+        obs, action, reward, discount, next_obs, _ = utils.to_torch(
             batch, self.device)
 
         # augment

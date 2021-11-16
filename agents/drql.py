@@ -135,7 +135,7 @@ class DRQLAgent(object):
                 self.batch_size, beta, self.discount, self.multistep_return)
         else:
             batch = next(replay_buffer)
-            obs, action, reward, discount, next_obs = utils.to_torch(  # todo not done in replay
+            obs, action, reward, discount, next_obs, all_obs = utils.to_torch(  # todo not done in replay
                 batch, self.device)
             weights = None
 

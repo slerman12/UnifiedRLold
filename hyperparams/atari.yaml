@@ -20,7 +20,7 @@ num_seed_frames: 1600  # should be >= replay_buffer_num_workers * truncate_episo
 #num_seed_frames: 4004  # should be >= replay_buffer_num_workers * truncate_episode_len + action_repeat ?
 #num_seed_frames: 12000
 #num_exploration_steps: 5000
-max_episode_frames: none  # must be > update_every_steps, >= nstep - 1
+max_episode_frames: 0  # must be > update_every_steps, >= nstep - 1
 truncate_episode_frames: 400
 #truncate_episode_len: false
 # eval

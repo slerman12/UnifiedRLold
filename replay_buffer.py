@@ -89,7 +89,7 @@ class ReplayBuffer(IterableDataset):
         self._episode_fns = []
         self._episodes = dict()
         self._nstep = nstep
-        self._discount = discount
+        self.discount = discount
         self._fetch_every = fetch_every
         self._samples_since_last_fetch = fetch_every
         self._save_snapshot = save_snapshot
@@ -162,14 +162,15 @@ class ReplayBuffer(IterableDataset):
         obs = episode['observation'][idx - 1]
         action = episode['action'][idx]
         next_obs = episode['observation'][idx + self._nstep - 1]
+        all_obs = episode['observation'][idx:idx + self._nstep]
         reward = np.zeros_like(episode['reward'][idx])
         discount = np.ones_like(episode['discount'][idx])
         # todo all step faster to compute q-vals across whole episode in one go, just recompute Q of last obs
         for i in range(self._nstep):
             step_reward = episode['reward'][idx + i]
             reward += discount * step_reward
-            discount *= episode['discount'][idx + i] * self._discount  # todo can also multiply by episode['done'][idx]
-        return obs, action, reward, discount, next_obs  # todo or can return episode['done'][idx] here
+            discount *= episode['discount'][idx + i] * self.discount  # todo can also multiply by episode['done'][idx]
+        return obs, action, reward, discount, next_obs, all_obs  # todo or can return episode['done'][idx] here
 
     def __iter__(self):
         while True:

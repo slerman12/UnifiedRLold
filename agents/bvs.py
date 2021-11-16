@@ -1,4 +1,7 @@
-import numpy as np
+# Copyright (c) Sam Lerman. All Rights Reserved.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 import torch
 import torch.nn.functional as F
 
@@ -6,30 +9,28 @@ import utils
 
 from blocks.augmentations import RandomShiftsAug
 from blocks.encoders import Encoder
-from blocks.actors import DiagGaussianActor
+from blocks.actors import Actor
 from blocks.critics import DoubleQCritic
+from blocks.networks import MLP
 
 
-class SACAgent:
-    """SAC algorithm."""
+class BVSAgent:
     def __init__(self, obs_shape, action_shape, discrete, device, lr, feature_dim,
                  hidden_dim, critic_target_tau, num_expl_steps,
-                 update_every_steps, stddev_clip, use_tb,
-                 init_temperature, learnable_temperature):
-        super().__init__()
+                 update_every_steps, stddev_schedule, stddev_clip, use_tb):
         self.discrete = discrete
         self.device = device
         self.critic_target_tau = critic_target_tau
         self.update_every_steps = update_every_steps
         self.use_tb = use_tb
         self.num_expl_steps = num_expl_steps
+        self.stddev_schedule = stddev_schedule
         self.stddev_clip = stddev_clip
-        self.learnable_temperature = learnable_temperature
 
         # models
         self.encoder = Encoder(obs_shape).to(device)
-        self.actor = DiagGaussianActor(self.encoder.repr_dim, action_shape, feature_dim,
-                                       hidden_dim).to(device)
+        self.actor = Actor(self.encoder.repr_dim, action_shape, feature_dim,
+                           hidden_dim).to(device)
 
         self.critic = DoubleQCritic(self.encoder.repr_dim, action_shape, feature_dim,
                                     hidden_dim).to(device)
@@ -37,16 +38,14 @@ class SACAgent:
                                            feature_dim, hidden_dim).to(device)
         self.critic_target.load_state_dict(self.critic.state_dict())
 
-        self.log_alpha = torch.tensor(np.log(init_temperature)).to(self.device)
-        self.log_alpha.requires_grad = True
-        # set target entropy to -|A|
-        self.target_entropy = -action_shape[-1]
+        self.sub_planner = MLP(self.encoder.repr_dim, self.encoder.repr_dim, self.encoder.repr_dim, 5)
+        self.planner = MLP(self.encoder.repr_dim, 528, 528, 5)
 
         # optimizers
         self.encoder_opt = torch.optim.Adam(self.encoder.parameters(), lr=lr)
         self.actor_opt = torch.optim.Adam(self.actor.parameters(), lr=lr)
         self.critic_opt = torch.optim.Adam(self.critic.parameters(), lr=lr)
-        self.log_alpha_optimizer = torch.optim.Adam([self.log_alpha], lr=lr)
+        self.planner_opt = torch.optim.Adam(self.planner.parameters(), lr=lr)
 
         # data augmentation
         self.aug = RandomShiftsAug(pad=4)
@@ -60,14 +59,11 @@ class SACAgent:
         self.actor.train(training)
         self.critic.train(training)
 
-    @property
-    def alpha(self):
-        return self.log_alpha.exp()
-
     def act(self, obs, step, eval_mode):
         obs = torch.as_tensor(obs, device=self.device)
         obs = self.encoder(obs.unsqueeze(0))
-        dist = self.actor(obs)
+        stddev = utils.schedule(self.stddev_schedule, step)
+        dist = self.actor(obs, stddev)
         if eval_mode:
             action = dist.mean
         else:
@@ -84,11 +80,11 @@ class SACAgent:
         metrics = dict()
 
         with torch.no_grad():
-            dist = self.actor(next_obs)
-            next_action = dist.rsample()
-            log_prob = dist.log_prob(next_action).sum(-1, keepdim=True)
+            stddev = utils.schedule(self.stddev_schedule, step)
+            dist = self.actor(next_obs, stddev)
+            next_action = dist.sample(clip=self.stddev_clip)
             target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
-            target_V = torch.min(target_Q1, target_Q2) - self.alpha.detach() * log_prob
+            target_V = torch.min(target_Q1, target_Q2)
             target_Q = reward + (discount * target_V)
 
         Q1, Q2 = self.critic(obs, action)
@@ -109,16 +105,17 @@ class SACAgent:
 
         return metrics
 
-    def update_actor_and_alpha(self, obs, step):
+    def update_actor(self, obs, step):
         metrics = dict()
 
-        dist = self.actor(obs)
-        action = dist.rsample()
+        stddev = utils.schedule(self.stddev_schedule, step)
+        dist = self.actor(obs, stddev)
+        action = dist.sample(clip=self.stddev_clip)
         log_prob = dist.log_prob(action).sum(-1, keepdim=True)
         Q1, Q2 = self.critic(obs, action)
         Q = torch.min(Q1, Q2)
 
-        actor_loss = (self.alpha.detach() * log_prob - Q).mean()
+        actor_loss = -Q.mean()
 
         # optimize actor
         self.actor_opt.zero_grad(set_to_none=True)
@@ -130,30 +127,64 @@ class SACAgent:
             metrics['actor_logprob'] = log_prob.mean().item()
             metrics['actor_ent'] = dist.entropy().sum(dim=-1).mean().item()
 
-        if self.learnable_temperature:
-            self.log_alpha_optimizer.zero_grad()
-            alpha_loss = (self.alpha *
-                          (-log_prob - self.target_entropy).detach()).mean()
-            metrics['alpha_loss'] = alpha_loss.item()
-            metrics['alpha_value'] = self.alpha
-            alpha_loss.backward()
-            self.log_alpha_optimizer.step()
+        return metrics
+
+    def update_planner(self, obs, action, all_obs, step, discount):
+        metrics = dict()
+
+        # for now, do 2-step only todo
+        all_obs = torch.cat([all_obs[:, 0], all_obs[:, -1]], dim=1)
+
+        next_obs = self.aug(all_obs[:, 1:].float())
+
+        with torch.no_grad():
+            stddev = utils.schedule(self.stddev_schedule, step)
+            dist = self.actor(next_obs, stddev)
+            next_action = dist.sample(clip=self.stddev_clip)
+
+            next_obs = self.encoder(next_obs)
+            next_obs = self.sub_planner(next_obs, next_action)
+
+            next_obs[:, -1] = self.planner(next_obs[:, -1], next_action[:, -1])
+
+            discount = discount ** torch.arange(next_obs.shape[1])
+            discounted = next_obs * discount[None, :]
+            target_plan = discounted.sum(dim=1)
+
+            # todo double/dual planning learning
+            # target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
+            # target_V = torch.min(target_Q1, target_Q2)
+            # target_Q = reward + (discount * target_V)
+
+        obs = self.sub_planner(obs, action)
+        plan = self.planner(obs, action)
+
+        planner_loss = F.mse_loss(plan, target_plan)
+
+        if self.use_tb:
+            metrics['planner_loss'] = planner_loss.item()
+
+        # optimize encoder and critic
+        self.encoder_opt.zero_grad(set_to_none=True)
+        self.planner_opt.zero_grad(set_to_none=True)
+        planner_loss.backward()
+        self.planner_opt.step()
+        self.encoder_opt.step()
 
         return metrics
 
     def update(self, replay_iter, step):
         metrics = dict()
-
         if step % self.update_every_steps != 0:
             return metrics
 
         batch = next(replay_iter)
-        obs, action, reward, discount, next_obs, _ = utils.to_torch(
+        obs, action, reward, discount, next_obs, all_obs = utils.to_torch(
             batch, self.device)
 
         # augment
-        # obs = self.aug(obs.float())
-        # next_obs = self.aug(next_obs.float())
+        obs = self.aug(obs.float())
+        next_obs = self.aug(next_obs.float())
         # encode
         obs = self.encoder(obs)
         with torch.no_grad():
@@ -167,7 +198,10 @@ class SACAgent:
             self.update_critic(obs, action, reward, discount, next_obs, step))
 
         # update actor
-        metrics.update(self.update_actor_and_alpha(obs.detach(), step))
+        metrics.update(self.update_actor(obs.detach(), step))
+
+        # update planner
+        metrics.update(self.update_planner(obs, action, all_obs, step, replay_iter.discount))
 
         # update critic target
         utils.soft_update_params(self.critic, self.critic_target,
