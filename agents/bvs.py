@@ -16,11 +16,12 @@ from blocks.networks import MLP
 
 class BVSAgent:
     def __init__(self, obs_shape, action_shape, discrete, device, lr, feature_dim,
-                 hidden_dim, critic_target_tau, num_expl_steps,
+                 hidden_dim, critic_target_tau, planner_discount, num_expl_steps,
                  update_every_steps, stddev_schedule, stddev_clip, use_tb):
         self.discrete = discrete
         self.device = device
         self.critic_target_tau = critic_target_tau
+        self.planner_discount = planner_discount
         self.update_every_steps = update_every_steps
         self.use_tb = use_tb
         self.num_expl_steps = num_expl_steps
@@ -201,7 +202,7 @@ class BVSAgent:
         metrics.update(self.update_actor(obs.detach(), step))
 
         # update planner
-        metrics.update(self.update_planner(obs, action, all_obs, step, replay_iter.discount))
+        metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
 
         # update critic target
         utils.soft_update_params(self.critic, self.critic_target,

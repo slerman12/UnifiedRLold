@@ -58,7 +58,7 @@ class ActionRepeatWrapper(dm_env.Environment):
         for i in range(self._num_repeats):
             time_step = self._env.step(action)
             reward += (time_step.reward or 0.0) * discount
-            discount *= time_step.discount
+            discount *= time_step._discount
             if time_step.last():
                 break
 
@@ -204,7 +204,7 @@ class TimeLimit(dm_env.Environment):
         if self._max_episode_len:
             if self._elapsed_steps >= self._max_episode_len:
                 # time_step = time_step.get_last()   # todo make sure same thing as below edit: unless extended t step
-                time_step = dm_env.truncation(time_step.reward, time_step.observation, time_step.discount)
+                time_step = dm_env.truncation(time_step.reward, time_step.observation, time_step._discount)
         self.time_step = time_step
         return time_step
 
@@ -254,7 +254,7 @@ class ExtendedTimeStepWrapper(dm_env.Environment):
                                 step_type=time_step.step_type,
                                 action=action,
                                 reward=time_step.reward or 0.0,
-                                discount=time_step.discount or 1.0)
+                                discount=time_step._discount or 1.0)
 
     def observation_spec(self):
         return self._env.observation_spec()

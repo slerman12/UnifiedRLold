@@ -89,7 +89,7 @@ class ReplayBuffer(IterableDataset):
         self._episode_fns = []
         self._episodes = dict()
         self._nstep = nstep
-        self.discount = discount
+        self._discount = discount
         self._fetch_every = fetch_every
         self._samples_since_last_fetch = fetch_every
         self._save_snapshot = save_snapshot
@@ -169,7 +169,7 @@ class ReplayBuffer(IterableDataset):
         for i in range(self._nstep):
             step_reward = episode['reward'][idx + i]
             reward += discount * step_reward
-            discount *= episode['discount'][idx + i] * self.discount  # todo can also multiply by episode['done'][idx]
+            discount *= episode['discount'][idx + i] * self._discount  # todo can also multiply by episode['done'][idx]
         return obs, action, reward, discount, next_obs, all_obs  # todo or can return episode['done'][idx] here
 
     def __iter__(self):

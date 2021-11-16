@@ -83,7 +83,7 @@ class Workspace:
         self.replay_loader = make_replay_loader(
             self.work_dir / 'buffer', self.cfg.replay_buffer_size,
             self.cfg.batch_size, self.cfg.replay_buffer_num_workers,
-            self.cfg.save_snapshot, self.cfg.nstep, self.cfg.discount)
+            self.cfg.save_snapshot, self.cfg.nstep, self.cfg._discount)
         self._replay_iter = None
 
         self.video_recorder = VideoRecorder(
