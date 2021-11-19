@@ -149,7 +149,7 @@ class BVSAgent:
 
             next_obs = self.sub_planner(next_obs, next_action)
             next_obs[:, -1] = self.planner(next_obs[:, -1])
-            next_obs = torch.cat([obs, next_obs], dim=1)
+            next_obs = torch.cat([obs.unsqueeze(1), next_obs], dim=1)
 
             discount = discount ** torch.arange(next_obs.shape[1])
             discounted = next_obs * discount[None, :]
