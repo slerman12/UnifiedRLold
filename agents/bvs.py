@@ -39,8 +39,9 @@ class BVSAgent:
                                            feature_dim, hidden_dim).to(device)
         self.critic_target.load_state_dict(self.critic.state_dict())
 
-        self.sub_planner = MLP(self.encoder.repr_dim, self.encoder.repr_dim, self.encoder.repr_dim, 5)
-        self.planner = MLP(self.encoder.repr_dim, 528, 528, 5)
+        action_dim = action_shape[-1]
+        self.sub_planner = MLP(self.encoder.repr_dim + action_dim, self.encoder.repr_dim, self.encoder.repr_dim, 5)
+        self.planner = MLP(self.encoder.repr_dim, self.encoder.repr_dim, self.encoder.repr_dim, 5)
 
         # optimizers
         self.encoder_opt = torch.optim.Adam(self.encoder.parameters(), lr=lr)
@@ -134,7 +135,7 @@ class BVSAgent:
         metrics = dict()
 
         # for now, do 2-step only todo
-        all_obs = torch.cat([all_obs[:, 0], all_obs[:, -1]], dim=1)
+        all_obs = all_obs[:, 0:2]
 
         next_obs = self.aug(all_obs[:, 1:].float())
 
@@ -146,9 +147,9 @@ class BVSAgent:
             next_obs = self.encoder(next_obs)
             next_obs = self.sub_planner(next_obs, next_action)
 
-            next_obs[:, -1] = self.planner(next_obs[:, -1], next_action[:, -1])
+            next_obs[:, -1] = self.planner(next_obs[:, -1])
 
-            discount = discount ** torch.arange(next_obs.shape[1])
+            discount = discount ** (torch.arange(next_obs.shape[1]) + 1)
             discounted = next_obs * discount[None, :]
             target_plan = discounted.sum(dim=1)
 
@@ -158,7 +159,7 @@ class BVSAgent:
             # target_Q = reward + (discount * target_V)
 
         obs = self.sub_planner(obs, action)
-        plan = self.planner(obs, action)
+        plan = self.planner(obs)
 
         planner_loss = F.mse_loss(plan, target_plan)
 

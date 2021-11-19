@@ -153,6 +153,8 @@ for name in results:
     if atari:
         mean_human_norm = np.mean([human_norm[key] for key in human_norm])
         med_human_norm = np.median([human_norm[key] for key in human_norm])
+
+    # TODO norm across seeds FIRST
     mean = np.mean([mean_per_env[key] for key in mean_per_env])
     median = np.median([mean_per_env[key] for key in mean_per_env])
     if atari:
