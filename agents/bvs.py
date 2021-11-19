@@ -40,10 +40,10 @@ class BVSAgent:
         self.critic_target.load_state_dict(self.critic.state_dict())
 
         action_dim = action_shape[-1]
-        self.sub_planner = MLP(self.encoder.repr_dim + action_dim,
-                               self.encoder.repr_dim, self.encoder.repr_dim, 5).to(device)
-        self.planner = MLP(self.encoder.repr_dim, self.encoder.repr_dim,
-                           self.encoder.repr_dim, 5).to(device)
+        self.sub_planner = MLP(self.encoder.repr_dim + action_dim, 528,
+                               self.encoder.repr_dim, 1).to(device)
+        self.planner = MLP(self.encoder.repr_dim, 528,
+                           self.encoder.repr_dim, 1).to(device)
         # TODO planner target
 
         # optimizers
