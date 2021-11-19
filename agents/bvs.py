@@ -135,7 +135,7 @@ class BVSAgent:
         metrics = dict()
 
         # for now, do 2-step only todo
-        all_obs = torch.cat([all_obs[:, 0], all_obs[:, 1]], dim=0)
+        all_obs = all_obs[:, 0:2]
 
         obs = self.sub_planner(obs, action)
 
