@@ -137,16 +137,15 @@ class BVSAgent:
         # for now, do 2-step only todo
         all_obs = torch.cat([all_obs[:, 0], all_obs[:, 1]], dim=0)
 
-        next_obs = self.aug(all_obs[:, 1:].float())
-
         with torch.no_grad():
+            next_obs = self.aug(all_obs[:, 1:].float())
+            next_obs = self.encoder(next_obs)
+
             stddev = utils.schedule(self.stddev_schedule, step)
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
 
-            next_obs = self.encoder(next_obs)
             next_obs = self.sub_planner(next_obs, next_action)
-
             next_obs[:, -1] = self.planner(next_obs[:, -1])
 
             discount = discount ** (torch.arange(next_obs.shape[1]) + 1)
