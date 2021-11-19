@@ -140,10 +140,12 @@ class BVSAgent:
         # for now, do 2-step only todo
         all_obs = all_obs[:, 0:2]
 
+        all_obs = all_obs[:, 1:].float()
+
         obs = self.sub_planner(obs, action)
 
         with torch.no_grad():
-            next_obs = self.aug(all_obs[:, 1:].float())
+            next_obs = self.aug(all_obs.view(-1, obs.shape[-1])).view(all_obs.shape)
             next_obs = self.encoder(next_obs)
 
             stddev = utils.schedule(self.stddev_schedule, step)
