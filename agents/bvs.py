@@ -137,6 +137,8 @@ class BVSAgent:
         # for now, do 2-step only todo
         all_obs = torch.cat([all_obs[:, 0], all_obs[:, 1]], dim=0)
 
+        obs = self.sub_planner(obs, action)
+
         with torch.no_grad():
             next_obs = self.aug(all_obs[:, 1:].float())
             next_obs = self.encoder(next_obs)
@@ -147,17 +149,12 @@ class BVSAgent:
 
             next_obs = self.sub_planner(next_obs, next_action)
             next_obs[:, -1] = self.planner(next_obs[:, -1])
+            next_obs = torch.cat([obs, next_obs], dim=1)
 
-            discount = discount ** (torch.arange(next_obs.shape[1]) + 1)
+            discount = discount ** torch.arange(next_obs.shape[1])
             discounted = next_obs * discount[None, :]
             target_plan = discounted.sum(dim=1)
 
-            # todo double/dual planning learning
-            # target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
-            # target_V = torch.min(target_Q1, target_Q2)
-            # target_Q = reward + (discount * target_V)
-
-        obs = self.sub_planner(obs, action)
         plan = self.planner(obs)
 
         planner_loss = F.mse_loss(plan, target_plan)
