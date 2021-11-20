@@ -42,6 +42,9 @@ class BVSAgent:
         action_dim = action_shape[-1]
         self.sub_planner = MLP(self.encoder.repr_dim + action_dim, 528,
                                528, 3).to(device)
+        self.sub_planner_target = MLP(self.encoder.repr_dim + action_dim, 528,
+                                      528, 3).to(device)
+        self.sub_planner_target.load_state_dict(self.sub_planner.state_dict())
         self.planner = MLP(528, 528, self.encoder.repr_dim, 3).to(device)
         self.planner_target = MLP(528, 528, self.encoder.repr_dim, 3).to(device)
         self.planner_target.load_state_dict(self.planner.state_dict())
@@ -58,6 +61,7 @@ class BVSAgent:
 
         self.train()
         self.critic_target.train()
+        self.sub_planner_target.train()
         self.planner_target.train()
 
     def train(self, training=True):
@@ -94,8 +98,8 @@ class BVSAgent:
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
             # todo use planner
-            next_obs = self.sub_planner(next_obs, next_action)
-            next_obs = self.planner(next_obs)
+            next_obs = self.sub_planner_target(next_obs, next_action)
+            next_obs = self.planner_target(next_obs)
             target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
             target_V = torch.min(target_Q1, target_Q2)
             target_Q = reward + (discount * target_V)
@@ -170,11 +174,11 @@ class BVSAgent:
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
 
-            next_plan_obs = self.sub_planner(next_obs, next_action)
+            next_plan_obs = self.sub_planner_target(next_obs, next_action)
 
             next_plan_obs = next_plan_obs.view(*all_obs.shape[0:2], *next_plan_obs.shape[1:])
 
-            next_plan_obs[:, -1] = self.planner(next_plan_obs[:, -1])
+            next_plan_obs[:, -1] = self.planner_target(next_plan_obs[:, -1])
 
             all_plan_obs = torch.cat([plan_obs.unsqueeze(1), next_plan_obs], dim=1)
             discount = discount ** torch.arange(all_plan_obs.shape[1]).to(self.device)
@@ -228,6 +232,12 @@ class BVSAgent:
 
         # update critic target
         utils.soft_update_params(self.critic, self.critic_target,
+                                 self.critic_target_tau)
+
+        # update planner target
+        utils.soft_update_params(self.sub_planner, self.sub_planner_target,
+                                 self.critic_target_tau)
+        utils.soft_update_params(self.planner, self.planner_target,
                                  self.critic_target_tau)
 
         return metrics
