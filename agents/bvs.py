@@ -34,7 +34,6 @@ class BVSAgent:
                            hidden_dim).to(device)
 
         plan_dim = hidden_dim
-        action_dim = action_shape[-1]
         self.sub_planner = Planner(self.encoder.repr_dim,
                                    feature_dim, hidden_dim, plan_dim,
                                    action_shape, sub_planner=True).to(device)
@@ -229,7 +228,7 @@ class BVSAgent:
         metrics.update(self.update_actor(obs.detach(), step))
 
         # update planner
-        # metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
+        metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
 
         # update critic target
         utils.soft_update_params(self.critic, self.critic_target,
