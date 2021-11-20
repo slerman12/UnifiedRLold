@@ -146,7 +146,6 @@ class BVSAgent:
 
         with torch.no_grad():
             next_obs = self.aug(all_obs.view((-1,) + all_obs.shape[2:]))
-            next_obs = next_obs.view(all_obs.shape)
             next_obs = self.encoder(next_obs)
 
             stddev = utils.schedule(self.stddev_schedule, step)
@@ -155,6 +154,8 @@ class BVSAgent:
 
             next_obs = self.sub_planner(next_obs, next_action)
             next_obs[:, -1] = self.planner(next_obs[:, -1])
+
+            next_obs = next_obs.view(all_obs.shape[0:1] + next_obs.shape[1:])
             next_obs = torch.cat([obs.unsqueeze(1), next_obs], dim=1)
 
             discount = discount ** torch.arange(next_obs.shape[1])
