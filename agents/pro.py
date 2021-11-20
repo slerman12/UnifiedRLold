@@ -102,7 +102,6 @@ class PROAgent:
         # Q2 = torch.abs(m2) * pi + b2
         Q1 = torch.abs(m1) * log_pi.mean(-1, keepdim=True) + b1
         Q2 = torch.abs(m2) * log_pi.mean(-1, keepdim=True) + b2
-        print(Q2.shape)
         return Q1, Q2
 
     def critic_target(self, obs, action):
@@ -120,6 +119,7 @@ class PROAgent:
             target_Q = reward + (discount * target_V)
 
         Q1, Q2 = self.critic(obs, action)
+        print(Q2[0], action[0], target_Q[0])
         critic_loss = F.mse_loss(Q1, target_Q) + F.mse_loss(Q2, target_Q)
 
         if self.use_tb:
