@@ -33,21 +33,22 @@ class BVSAgent:
         self.actor = Actor(self.encoder.repr_dim, action_shape, feature_dim,
                            hidden_dim).to(device)
 
-        self.critic = DoubleQCritic(self.encoder.repr_dim, action_shape, feature_dim,
+        plan_dim = 528
+        action_dim = action_shape[-1]
+        self.sub_planner = MLP(self.encoder.repr_dim + action_dim,
+                               plan_dim, plan_dim, 3).to(device)
+        self.sub_planner_target = MLP(self.encoder.repr_dim + action_dim,
+                                      plan_dim, plan_dim, 3).to(device)
+        self.sub_planner_target.load_state_dict(self.sub_planner.state_dict())
+        self.planner = MLP(plan_dim, plan_dim, plan_dim, 3).to(device)
+        self.planner_target = MLP(plan_dim, plan_dim, plan_dim, 3).to(device)
+        self.planner_target.load_state_dict(self.planner.state_dict())
+
+        self.critic = DoubleQCritic(plan_dim, action_shape, feature_dim,
                                     hidden_dim).to(device)
-        self.critic_target = DoubleQCritic(self.encoder.repr_dim, action_shape,
+        self.critic_target = DoubleQCritic(plan_dim, action_shape,
                                            feature_dim, hidden_dim).to(device)
         self.critic_target.load_state_dict(self.critic.state_dict())
-
-        action_dim = action_shape[-1]
-        self.sub_planner = MLP(self.encoder.repr_dim + action_dim, 528,
-                               528, 3).to(device)
-        self.sub_planner_target = MLP(self.encoder.repr_dim + action_dim, 528,
-                                      528, 3).to(device)
-        self.sub_planner_target.load_state_dict(self.sub_planner.state_dict())
-        self.planner = MLP(528, 528, self.encoder.repr_dim, 3).to(device)
-        self.planner_target = MLP(528, 528, self.encoder.repr_dim, 3).to(device)
-        self.planner_target.load_state_dict(self.planner.state_dict())
 
         # optimizers
         self.encoder_opt = torch.optim.Adam(self.encoder.parameters(), lr=lr)
@@ -178,7 +179,6 @@ class BVSAgent:
 
             next_plan_obs = next_plan_obs.view(*all_obs.shape[0:2], *next_plan_obs.shape[1:])
 
-            print(next_plan_obs[:, -1].shape, next_plan_obs.shape)
             next_plan_obs[:, -1] = self.planner_target(next_plan_obs[:, -1])
 
             all_plan_obs = torch.cat([plan_obs.unsqueeze(1), next_plan_obs], dim=1)
