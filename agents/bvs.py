@@ -209,7 +209,7 @@ class BVSAgent:
         obs, action, reward, discount, next_obs, all_obs = utils.to_torch(
             batch, self.device)
 
-        # augment
+        # augment  todo just do it in one all_obs go
         obs = self.aug(obs.float())
         next_obs = self.aug(next_obs.float())
         # encode
