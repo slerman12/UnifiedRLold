@@ -29,8 +29,6 @@ class Actor(nn.Module):
 
         if mu.isnan().any():
             assert False, "mu"
-        if std.isnan().any():
-            assert False, "std"
 
         dist = utils.TruncatedNormal(mu, std)
         return dist
