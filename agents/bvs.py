@@ -41,15 +41,16 @@ class BVSAgent:
 
         action_dim = action_shape[-1]
         self.sub_planner = MLP(self.encoder.repr_dim + action_dim, 528,
-                               self.encoder.repr_dim, 1).to(device)
-        self.planner = MLP(self.encoder.repr_dim, 528,
-                           self.encoder.repr_dim, 1).to(device)
-        # TODO planner target
+                               528, 3).to(device)
+        self.planner = MLP(528, 528, self.encoder.repr_dim, 3).to(device)
+        self.planner_target = MLP(528, 528, self.encoder.repr_dim, 3).to(device)
+        self.planner_target.load_state_dict(self.planner.state_dict())
 
         # optimizers
         self.encoder_opt = torch.optim.Adam(self.encoder.parameters(), lr=lr)
         self.actor_opt = torch.optim.Adam(self.actor.parameters(), lr=lr)
         self.critic_opt = torch.optim.Adam(self.critic.parameters(), lr=lr)
+        self.sub_planner_opt = torch.optim.Adam(self.sub_planner.parameters(), lr=lr)
         self.planner_opt = torch.optim.Adam(self.planner.parameters(), lr=lr)
 
         # data augmentation
@@ -57,6 +58,7 @@ class BVSAgent:
 
         self.train()
         self.critic_target.train()
+        self.planner_target.train()
 
     def train(self, training=True):
         self.training = training
@@ -108,11 +110,15 @@ class BVSAgent:
             metrics['critic_q2'] = Q2.mean().item()
             metrics['critic_loss'] = critic_loss.item()
 
-        # optimize encoder and critic
+        # optimize encoder, planners and critic
         self.encoder_opt.zero_grad(set_to_none=True)
+        self.planner_opt.zero_grad(set_to_none=True)
+        self.sub_planner_opt.zero_grad(set_to_none=True)
         self.critic_opt.zero_grad(set_to_none=True)
         critic_loss.backward()
         self.critic_opt.step()
+        self.sub_planner_opt.step()
+        self.planner_opt.step()
         self.encoder_opt.step()
 
         return metrics
@@ -182,12 +188,11 @@ class BVSAgent:
             metrics['planner_loss'] = planner_loss.item()
 
         # optimize encoder and critic
-        # self.encoder_opt.zero_grad(set_to_none=True)
+        self.sub_planner_opt.zero_grad(set_to_none=True)
         self.planner_opt.zero_grad(set_to_none=True)
         planner_loss.backward()
+        self.sub_planner_opt.step()
         self.planner_opt.step()
-        # todo don't update encoder here
-        # self.encoder_opt.step()
 
         return metrics
 
