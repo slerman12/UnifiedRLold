@@ -84,14 +84,21 @@ class BVSAgent:
     def update_critic(self, obs, action, reward, discount, next_obs, step):
         metrics = dict()
 
+        obs = self.sub_planner(obs, action)
+        obs = self.planner(obs)
+
         with torch.no_grad():
             stddev = utils.schedule(self.stddev_schedule, step)
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
+            # todo use planner
+            next_obs = self.sub_planner(next_obs, next_action)
+            next_obs = self.planner(next_obs)
             target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
             target_V = torch.min(target_Q1, target_Q2)
             target_Q = reward + (discount * target_V)
 
+        # todo use planner
         Q1, Q2 = self.critic(obs, action)
         critic_loss = F.mse_loss(Q1, target_Q) + F.mse_loss(Q2, target_Q)
 
@@ -139,7 +146,7 @@ class BVSAgent:
 
         # for now, do 2-step only todo
         all_obs = all_obs[:, 0:2]
-        # encoder grads already cleared :/ todo
+        # encoder grads already cleared :/ todo (and no need to update encoder here)
         all_obs = all_obs.float()
         obs = self.encoder(self.aug(all_obs[:, 0]))
 
@@ -149,7 +156,7 @@ class BVSAgent:
 
         with torch.no_grad():
             next_obs = self.aug(all_obs.view(-1, *all_obs.shape[2:]))
-            next_obs = self.encoder(next_obs)
+            next_obs = self.encoder(next_obs)  # todo redundant last obs re-compute
 
             stddev = utils.schedule(self.stddev_schedule, step)
             dist = self.actor(next_obs, stddev)
@@ -173,11 +180,12 @@ class BVSAgent:
             metrics['planner_loss'] = planner_loss.item()
 
         # optimize encoder and critic
-        self.encoder_opt.zero_grad(set_to_none=True)
+        # self.encoder_opt.zero_grad(set_to_none=True)
         self.planner_opt.zero_grad(set_to_none=True)
         planner_loss.backward()
         self.planner_opt.step()
-        self.encoder_opt.step()
+        # todo don't update encoder here
+        # self.encoder_opt.step()
 
         return metrics
 
