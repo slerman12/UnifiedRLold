@@ -98,14 +98,12 @@ class BVSAgent:
             stddev = utils.schedule(self.stddev_schedule, step)
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
-            # todo use planner
             next_obs = self.sub_planner_target(next_obs, next_action)
             next_obs = self.planner_target(next_obs)
             target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
             target_V = torch.min(target_Q1, target_Q2)
             target_Q = reward + (discount * target_V)
 
-        # todo use planner
         Q1, Q2 = self.critic(obs, action)
         critic_loss = F.mse_loss(Q1, target_Q) + F.mse_loss(Q2, target_Q)
 
@@ -229,7 +227,7 @@ class BVSAgent:
         metrics.update(self.update_actor(obs.detach(), step))
 
         # update planner
-        metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
+        # metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
 
         # update critic target
         utils.soft_update_params(self.critic, self.critic_target,
