@@ -72,7 +72,6 @@ class PROAgent:
         if eval_mode:
             action = dist.mean
         else:
-            print(dist.mean, stddev)
             action = dist.sample(clip=None)
             if step < self.num_expl_steps:
                 action.uniform_(-1.0, 1.0)
@@ -98,9 +97,11 @@ class PROAgent:
         # Q1 = torch.abs(m1) * log_pi + b1
         # Q2 = torch.abs(m2) * log_pi + b2
         # Alternatively again:
-        pi = torch.exp(log_pi)
-        Q1 = torch.abs(m1) * pi + b1
-        Q2 = torch.abs(m2) * pi + b2
+        # pi = torch.exp(log_pi)
+        # Q1 = torch.abs(m1) * pi + b1
+        # Q2 = torch.abs(m2) * pi + b2
+        Q1 = torch.abs(m1) * log_pi + b1
+        Q2 = torch.abs(m2) * log_pi + b2
         return Q1, Q2
 
     def critic_target(self, obs, action):
