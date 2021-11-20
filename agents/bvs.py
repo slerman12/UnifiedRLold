@@ -154,7 +154,7 @@ class BVSAgent:
 
             next_obs = self.sub_planner(next_obs, next_action)
 
-            next_obs = next_obs.view(*all_obs.shape[0:1], *next_obs.shape[1:])
+            next_obs = next_obs.view(*all_obs.shape[0:2], *next_obs.shape[1:])
 
             next_obs[:, -1] = self.planner(next_obs[:, -1])
 
