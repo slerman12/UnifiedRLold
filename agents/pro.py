@@ -100,8 +100,8 @@ class PROAgent:
         # pi = torch.exp(log_pi)
         # Q1 = torch.abs(m1) * pi + b1
         # Q2 = torch.abs(m2) * pi + b2
-        Q1 = torch.abs(m1) * log_pi + b1
-        Q2 = torch.abs(m2) * log_pi + b2
+        Q1 = torch.pow(m1, 2) * log_pi + b1
+        Q2 = torch.pow(m2, 2) * log_pi + b2
         return Q1, Q2
 
     def critic_target(self, obs, action):
