@@ -83,6 +83,7 @@ class PROAgent:
 
     def critic(self, obs, action, target=False):
         dist = self.actor(obs)
+        print(action[0])
         log_pi = dist.log_prob(action)
         m1, b1, m2, b2 = self.prop_target(obs) if target else self.prop(obs)
         # Q1 = torch.exp(m1 * log_pi + torch.log(b1))  # todo b can't be negative here
@@ -102,7 +103,6 @@ class PROAgent:
         # Q2 = torch.abs(m2) * pi + b2
         Q1 = torch.abs(m1) * log_pi.mean(-1, keepdim=True) + b1
         Q2 = torch.abs(m2) * log_pi.mean(-1, keepdim=True) + b2
-        print(Q1[0], m1[0], log_pi[0], b1[0])
         return Q1, Q2
 
     def critic_target(self, obs, action):
