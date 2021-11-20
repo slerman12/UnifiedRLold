@@ -33,15 +33,15 @@ class BVSAgent:
         self.actor = Actor(self.encoder.repr_dim, action_shape, feature_dim,
                            hidden_dim).to(device)
 
-        plan_dim = 528
+        plan_dim = hidden_dim
         action_dim = action_shape[-1]
         self.sub_planner = MLP(self.encoder.repr_dim + action_dim,
-                               plan_dim, plan_dim, 3).to(device)
+                               plan_dim, plan_dim, 1).to(device)
         self.sub_planner_target = MLP(self.encoder.repr_dim + action_dim,
-                                      plan_dim, plan_dim, 3).to(device)
+                                      plan_dim, plan_dim, 1).to(device)
         self.sub_planner_target.load_state_dict(self.sub_planner.state_dict())
-        self.planner = MLP(plan_dim, plan_dim, plan_dim, 3).to(device)
-        self.planner_target = MLP(plan_dim, plan_dim, plan_dim, 3).to(device)
+        self.planner = MLP(plan_dim, plan_dim, plan_dim, 1).to(device)
+        self.planner_target = MLP(plan_dim, plan_dim, plan_dim, 1).to(device)
         self.planner_target.load_state_dict(self.planner.state_dict())
 
         self.critic = DoubleQCritic(plan_dim, action_shape, feature_dim,
