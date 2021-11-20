@@ -27,11 +27,6 @@ class Actor(nn.Module):
         mu = torch.tanh(mu)
         std = torch.ones_like(mu) * std
 
-        if mu.isnan().any():
-            assert False, "mu"
-        if std.isnan().any():
-            assert False, "std"
-
         dist = utils.TruncatedNormal(mu, std)
         return dist
 
