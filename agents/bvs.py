@@ -140,7 +140,8 @@ class BVSAgent:
         # for now, do 2-step only todo
         all_obs = all_obs[:, 0:2]
         # encoder grads already cleared :/ todo
-        obs = self.encoder(self.aug(all_obs[:, 0]).float())
+        all_obs = all_obs.float()
+        obs = self.encoder(self.aug(all_obs[:, 0]))
 
         all_obs = all_obs[:, 1:].float()
 
