@@ -143,7 +143,7 @@ class BVSAgent:
         all_obs = all_obs.float()
         obs = self.encoder(self.aug(all_obs[:, 0]))
 
-        all_obs = all_obs[:, 1:].float()
+        # all_obs = all_obs[:, 1:].float()
 
         plan_obs = self.sub_planner(obs, action)
 
@@ -209,7 +209,7 @@ class BVSAgent:
         metrics.update(self.update_actor(obs.detach(), step))
 
         # update planner
-        metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
+        # metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
 
         # update critic target
         utils.soft_update_params(self.critic, self.critic_target,
