@@ -119,7 +119,7 @@ class PROAgent:
             target_Q = reward + (discount * target_V)
 
         Q1, Q2 = self.critic(obs, action)
-        print(Q2[0], action[0], target_Q[0])
+        print(Q2[0], action[0], target_Q[0], obs[0])
         critic_loss = F.mse_loss(Q1, target_Q) + F.mse_loss(Q2, target_Q)
 
         if self.use_tb:
