@@ -228,7 +228,7 @@ class BVSAgent:
         metrics.update(self.update_actor(obs.detach(), step))
 
         # update planner
-        metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
+        # metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
 
         # update critic target
         utils.soft_update_params(self.critic, self.critic_target,
