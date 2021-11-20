@@ -174,12 +174,11 @@ class BVSAgent:
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
 
-            print(next_obs.shape)
             next_plan_obs = self.sub_planner_target(next_obs, next_action)
-            print(next_plan_obs.shape)
 
             next_plan_obs = next_plan_obs.view(*all_obs.shape[0:2], *next_plan_obs.shape[1:])
 
+            print(next_plan_obs[:, -1].shape, next_plan_obs.shape)
             next_plan_obs[:, -1] = self.planner_target(next_plan_obs[:, -1])
 
             all_plan_obs = torch.cat([plan_obs.unsqueeze(1), next_plan_obs], dim=1)
