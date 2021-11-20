@@ -139,10 +139,12 @@ class BVSAgent:
 
         # for now, do 2-step only todo
         all_obs = all_obs[:, 0:2]
+        # encoder grads already cleared :/ todo
+        obs = self.encoder(self.aug(all_obs[:, 0]).float())
 
         all_obs = all_obs[:, 1:].float()
 
-        obs = self.sub_planner(obs, action)
+        plan_obs = self.sub_planner(obs, action)
 
         with torch.no_grad():
             next_obs = self.aug(all_obs.view(-1, *all_obs.shape[2:]))
@@ -152,18 +154,17 @@ class BVSAgent:
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
 
-            next_obs = self.sub_planner(next_obs, next_action)
+            next_plan_obs = self.sub_planner(next_obs, next_action)
 
-            next_obs = next_obs.view(*all_obs.shape[0:2], *next_obs.shape[1:])
+            next_plan_obs = next_plan_obs.view(*all_obs.shape[0:2], *next_plan_obs.shape[1:])
 
-            next_obs[:, -1] = self.planner(next_obs[:, -1])
+            next_plan_obs[:, -1] = self.planner(next_plan_obs[:, -1])
 
-            next_obs = torch.cat([obs.unsqueeze(1), next_obs], dim=1)
+            all_plan_obs = torch.cat([plan_obs.unsqueeze(1), next_plan_obs], dim=1)
+            discount = discount ** torch.arange(all_plan_obs.shape[1]).to(self.device)
+            target_plan = torch.einsum('j,ijk->ik', discount, all_plan_obs)
 
-            discount = discount ** torch.arange(next_obs.shape[1]).to(self.device)
-            target_plan = torch.einsum('j,ijk->ik', discount, next_obs)
-
-        plan = self.planner(obs)
+        plan = self.planner(plan_obs)
 
         planner_loss = F.mse_loss(plan, target_plan)
 
