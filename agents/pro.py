@@ -73,8 +73,10 @@ class PROAgent:
             action = dist.mean
         else:
             action = dist.sample(clip=None)
+            print(action)
             if step < self.num_expl_steps:
                 action.uniform_(-1.0, 1.0)
+            print(action)
         # continuous vs discrete
         if self.discrete:
             return torch.argmax(action, dim=-1).cpu().numpy()[0]

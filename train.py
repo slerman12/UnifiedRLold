@@ -208,12 +208,7 @@ class Workspace:
                 #     pass
 
             # take env step
-            try:
-                time_step = self.train_env.step(action)
-            except:
-                print(action)
-                print(action.shape)
-                return
+            time_step = self.train_env.step(action)
             episode_reward += time_step.reward
             store_it = time_step.last() and episode_step >= self.cfg.nstep
             # if store_it:
