@@ -11,7 +11,7 @@ from blocks.augmentations import RandomShiftsAug
 from blocks.encoders import Encoder
 from blocks.actors import Actor
 from blocks.critics import DoubleQCritic
-from blocks.networks import MLP
+from blocks.planners import Planner
 
 
 class BVSAgent:
@@ -35,13 +35,15 @@ class BVSAgent:
 
         plan_dim = hidden_dim
         action_dim = action_shape[-1]
-        self.sub_planner = MLP(self.encoder.repr_dim + action_dim,
-                               plan_dim, plan_dim, 1).to(device)
-        self.sub_planner_target = MLP(self.encoder.repr_dim + action_dim,
-                                      plan_dim, plan_dim, 1).to(device)
+        self.sub_planner = Planner(self.encoder.repr_dim,
+                                   feature_dim, hidden_dim, plan_dim,
+                                   action_shape, sub_planner=True).to(device)
+        self.sub_planner_target = Planner(self.encoder.repr_dim,
+                                          feature_dim, hidden_dim, plan_dim,
+                                          action_shape, sub_planner=True).to(device)
         self.sub_planner_target.load_state_dict(self.sub_planner.state_dict())
-        self.planner = MLP(plan_dim, plan_dim, plan_dim, 1).to(device)
-        self.planner_target = MLP(plan_dim, plan_dim, plan_dim, 1).to(device)
+        self.planner = Planner(plan_dim, plan_dim, plan_dim, plan_dim).to(device)
+        self.planner_target = Planner(plan_dim, plan_dim, plan_dim, plan_dim).to(device)
         self.planner_target.load_state_dict(self.planner.state_dict())
 
         self.critic = DoubleQCritic(plan_dim, action_shape, feature_dim,
@@ -115,13 +117,13 @@ class BVSAgent:
 
         # optimize encoder, planners and critic
         self.encoder_opt.zero_grad(set_to_none=True)
-        self.planner_opt.zero_grad(set_to_none=True)
         self.sub_planner_opt.zero_grad(set_to_none=True)
+        self.planner_opt.zero_grad(set_to_none=True)
         self.critic_opt.zero_grad(set_to_none=True)
         critic_loss.backward()
         self.critic_opt.step()
-        self.sub_planner_opt.step()
         self.planner_opt.step()
+        self.sub_planner_opt.step()
         self.encoder_opt.step()
 
         return metrics
