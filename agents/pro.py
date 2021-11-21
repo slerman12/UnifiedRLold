@@ -141,6 +141,7 @@ class PROAgent:
             target_V = torch.min(target_Q1, target_Q2)
             target_Q = reward + (discount * target_V)
 
+        # todo non double Q learning, non dual Q learning, entropy, critic network, trust region
         Q1, Q2 = self.critic(obs, action)
         critic_loss = F.mse_loss(Q1, target_Q) + F.mse_loss(Q2, target_Q)
 

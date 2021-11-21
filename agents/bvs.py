@@ -101,7 +101,8 @@ class BVSAgent:
             stddev = utils.schedule(self.stddev_schedule, step)
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
-            next_obs = self.sub_planner(next_obs, next_action)
+            next_obs = self.sub_planner_target(next_obs, next_action)
+            # next_obs = self.sub_planner(next_obs, next_action)
             next_obs = self.planner_target(next_obs)
             target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
             target_V = torch.min(target_Q1, target_Q2)
@@ -176,7 +177,8 @@ class BVSAgent:
             next_action = dist.sample(clip=self.stddev_clip)
 
             # todo should sub_planner use target ema?
-            next_plan_obs = self.sub_planner(next_obs, next_action)
+            next_plan_obs = self.sub_planner_target(next_obs, next_action)
+            # next_plan_obs = self.sub_planner(next_obs, next_action)
 
             next_plan_obs[:, -1] = self.planner_target(next_plan_obs[:, -1])
 
@@ -237,8 +239,8 @@ class BVSAgent:
                                  self.critic_target_tau)
 
         # update planner target
-        # utils.soft_update_params(self.sub_planner, self.sub_planner_target,
-        #                          self.critic_target_tau)
+        utils.soft_update_params(self.sub_planner, self.sub_planner_target,
+                                 self.critic_target_tau)
         utils.soft_update_params(self.planner, self.planner_target,
                                  self.critic_target_tau)
 

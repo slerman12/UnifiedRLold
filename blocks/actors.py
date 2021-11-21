@@ -65,6 +65,57 @@ class DoublePropMB(nn.Module):
         return m1, b1, m2, b2
 
 
+class DoublePropMBEfficient(nn.Module):
+    def __init__(self, repr_dim, feature_dim, hidden_dim):
+        super().__init__()
+
+        self.trunk = nn.Sequential(nn.Linear(repr_dim, feature_dim),
+                                   nn.LayerNorm(feature_dim), nn.Tanh())
+
+        def mlp():
+            return nn.Sequential(nn.Linear(feature_dim, hidden_dim),
+                                 nn.ReLU(inplace=True),
+                                 nn.Linear(hidden_dim, hidden_dim),
+                                 nn.ReLU(inplace=True),
+                                 nn.Linear(hidden_dim, 2))
+
+        self.MB1 = mlp()
+        self.MB2 = mlp()
+
+        self.apply(utils.weight_init)
+
+    def forward(self, obs):
+        h = self.trunk(obs)
+
+        m1, b1 = torch.split(self.MB1(h), 2, dim=-1)
+        m2, b2 = torch.split(self.MB2(h), 2, dim=-1)
+
+        return m1, b1, m2, b2
+
+
+class PropMBEfficient(nn.Module):
+    def __init__(self, repr_dim, feature_dim, hidden_dim):
+        super().__init__()
+
+        self.trunk = nn.Sequential(nn.Linear(repr_dim, feature_dim),
+                                   nn.LayerNorm(feature_dim), nn.Tanh())
+
+        self.MB = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
+                                nn.ReLU(inplace=True),
+                                nn.Linear(hidden_dim, hidden_dim),
+                                nn.ReLU(inplace=True),
+                                nn.Linear(hidden_dim, 2))
+
+        self.apply(utils.weight_init)
+
+    def forward(self, obs):
+        h = self.trunk(obs)
+
+        m, b = torch.split(self.MB(h), 2, dim=-1)
+
+        return m, b
+
+
 class DoubleQIntegral(nn.Module):
     def __init__(self, action_shape, feature_dim, hidden_dim):
         super().__init__()

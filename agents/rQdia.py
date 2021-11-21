@@ -11,52 +11,38 @@ from . import DrQV2Agent
 
 
 class rQdiaAgent(DrQV2Agent):
-    def update_critic(self, obs, obs_orig, action, reward, discount, next_obs, step):
+    def update_rQdia(self, obs, obs_orig, action):
         metrics = dict()
-
-        with torch.no_grad():
-            stddev = utils.schedule(self.stddev_schedule, step)
-            dist = self.actor(next_obs, stddev)
-            next_action = dist.sample(clip=self.stddev_clip)
-            target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
-            target_V = torch.min(target_Q1, target_Q2)
-            target_Q = reward + (discount * target_V)
-
-        Q1, Q2 = self.critic(obs, action)
-        critic_loss = F.mse_loss(Q1, target_Q) + F.mse_loss(Q2, target_Q)
 
         # rQdia (Regularizing Q-Value Distributions With Image Augmentation)
 
-        batch_size = action.shape[0]
+        batch_size = action.shape[0]  # |B|
 
-        scaling = 0.15  # lower = more efficient
-        num_actions = round(batch_size * scaling)
+        scaling = 1  # ∈ (0, 1], lower = more efficient
+        num_actions = max(1, round(batch_size * scaling))  # m
 
         obs_dim = obs.shape[1]
         action_dim = action.shape[1]
 
-        obs_orig_pairs = obs_orig.unsqueeze(1).expand(-1, num_actions, -1).reshape(-1, obs_dim)
-        obs_pairs = obs.unsqueeze(1).expand(-1, num_actions, -1).reshape(obs_orig_pairs.shape)
-        action_pairs = action[:num_actions].unsqueeze(0).expand(batch_size, -1, -1).reshape(-1, action_dim)
+        obs_orig_pairs = obs_orig.unsqueeze(1).expand(-1, num_actions, -1).reshape(-1, obs_dim)  # s^(i)
+        obs_pairs = obs.unsqueeze(1).expand(-1, num_actions, -1).reshape(obs_orig_pairs.shape)  # aug(s^(i))
+        action_pairs = action[:num_actions].unsqueeze(0).expand(batch_size, -1, -1).reshape(-1, action_dim)  # a^(j)
 
         # Q dists
         obs_orig_Q1_dist, obs_orig_Q2_dist = self.critic(obs_orig_pairs, action_pairs)
         obs_Q1_dist, obs_Q2_dist = self.critic(obs_pairs, action_pairs)
 
-        critic_loss += F.mse_loss(obs_orig_Q1_dist, obs_Q1_dist) + F.mse_loss(obs_orig_Q2_dist, obs_Q2_dist)
+        rQdia_loss = F.mse_loss(obs_orig_Q1_dist, obs_Q1_dist) + F.mse_loss(obs_orig_Q2_dist, obs_Q2_dist)
 
         if self.use_tb:
-            metrics['critic_target_q'] = target_Q.mean().item()
-            metrics['critic_q1'] = Q1.mean().item()
-            metrics['critic_q2'] = Q2.mean().item()
-            metrics['critic_loss'] = critic_loss.item()
+            metrics['rQdia_loss'] = rQdia_loss.item()
 
         # optimize encoder and critic
         self.encoder_opt.zero_grad(set_to_none=True)
         self.critic_opt.zero_grad(set_to_none=True)
-        critic_loss.backward()
+        rQdia_loss.backward()
         self.critic_opt.step()
-        self.encoder_opt.step()
+        self.encoder_opt.step()  # todo should encoder be updated too?
 
         return metrics
 
@@ -86,7 +72,11 @@ class rQdiaAgent(DrQV2Agent):
 
         # update critic
         metrics.update(
-            self.update_critic(obs, obs_orig, action, reward, discount, next_obs, step))
+            self.update_critic(obs, action, reward, discount, next_obs, step))
+
+        # update rQdia
+        metrics.update(
+            self.update_rQdia(obs, obs_orig, action))
 
         # update actor
         metrics.update(self.update_actor(obs.detach(), step))
