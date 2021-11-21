@@ -27,9 +27,6 @@ class Actor(nn.Module):
         mu = torch.tanh(mu)
         std = torch.ones_like(mu) * std
 
-        if mu.isnan().any():
-            assert False, "mu"
-
         dist = utils.TruncatedNormal(mu, std)
         return dist
 
@@ -77,6 +74,26 @@ class DoublePropMB(nn.Module):
         # b2 = torch.abs(self.B2(h)) + 0.001
         b2 = self.B2(h)
         return m1, b1, m2, b2
+
+
+class DoublePropMono(nn.Module):
+    def __init__(self, width, height, depth):
+        super().__init__()
+        self.depth = depth
+
+        self.M1 = [torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)]
+        self.B1 = [torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)]
+        self.M2 = [torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)]
+        self.B2 = [torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)]
+
+        self.apply(utils.weight_init)
+
+    def forward(self, val):
+        q1 = q2 = val
+        for l in range(self.depth):
+            q1 = torch.min(torch.max(self.M1[l] * q1 + self.B1[l], dim=-1)[0], dim=-1)[0]
+            q2 = torch.min(torch.max(self.M2[l] * q2 + self.B2[l], dim=-1)[0], dim=-1)[0]
+        return q1, q2
 
 
 class DiagGaussianActor(nn.Module):

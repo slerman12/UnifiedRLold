@@ -9,7 +9,7 @@ import utils
 
 from blocks.augmentations import RandomShiftsAug
 from blocks.encoders import Encoder
-from blocks.actors import Actor
+from blocks.actors import Actor, DoublePropMono
 from blocks.actors import DoublePropMB
 # from blocks.critics import DoubleQCritic
 
@@ -34,8 +34,12 @@ class PROAgent:
         self.actor = Actor(self.encoder.repr_dim, action_shape, feature_dim,
                            hidden_dim).to(device)
 
-        self.prop = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
-        self.prop_target = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
+        # self.prop = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
+        # self.prop_target = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
+        # self.prop_target.load_state_dict(self.prop.state_dict())
+
+        self.prop = DoublePropMono(hidden_dim, hidden_dim, 3).to(device)
+        self.prop_target = DoublePropMono(hidden_dim, hidden_dim, 3).to(device)
         self.prop_target.load_state_dict(self.prop.state_dict())
 
         # self.critic = DoubleQCritic(self.encoder.repr_dim, action_shape, feature_dim,
@@ -84,7 +88,8 @@ class PROAgent:
     def critic(self, obs, action, target=False):
         dist = self.actor(obs, 1)
         log_pi = dist.log_prob(action)
-        m1, b1, m2, b2 = self.prop_target(obs) if target else self.prop(obs)
+        # m1, b1, m2, b2 = self.prop_target(obs) if target else self.prop(obs)
+
         # Q1 = torch.exp(m1 * log_pi + torch.log(b1))  # todo b can't be negative here
         # Q2 = torch.exp(m2 * log_pi + torch.log(b2))
         # Or just:
@@ -100,8 +105,11 @@ class PROAgent:
         # pi = torch.exp(log_pi)
         # Q1 = torch.abs(m1) * pi + b1
         # Q2 = torch.abs(m2) * pi + b2
-        Q1 = torch.abs(m1) * log_pi.mean(-1, keepdim=True) + b1
-        Q2 = torch.abs(m2) * log_pi.mean(-1, keepdim=True) + b2
+
+        # Q1 = torch.abs(m1) * log_pi.mean(-1, keepdim=True) + b1
+        # Q2 = torch.abs(m2) * log_pi.mean(-1, keepdim=True) + b2
+
+        Q1, Q2 = self.prop_target(log_pi) if target else self.prop(log_pi)
         return Q1, Q2
 
     def critic_target(self, obs, action):
