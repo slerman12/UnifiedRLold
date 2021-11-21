@@ -34,7 +34,7 @@ class Actor(nn.Module):
 
 
 class DoublePropMB(nn.Module):
-    def __init__(self, repr_dim, feature_dim, hidden_dim, 1):
+    def __init__(self, repr_dim, feature_dim, hidden_dim):
         super().__init__()
 
         self.trunk = nn.Sequential(nn.Linear(repr_dim, feature_dim),
