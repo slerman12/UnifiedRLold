@@ -105,8 +105,8 @@ class DoubleQIntegral(nn.Module):
     def forward(self, obs):
         h = self.trunk(obs)
 
-        i1 = self.M1(h)
-        i2 = self.M2(h)
+        i1 = self.I1(h)
+        i2 = self.I2(h)
         return i1, i2
 
 
