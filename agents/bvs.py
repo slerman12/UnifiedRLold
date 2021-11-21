@@ -175,15 +175,16 @@ class BVSAgent:
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
 
+            # todo should sub_planner use target ema?
             next_plan_obs = self.sub_planner(next_obs, next_action)
 
             next_plan_obs[:, -1] = self.planner_target(next_plan_obs[:, -1])
 
-        # todo should plan obs be differentiable here? if not, indent next 3
-        all_plan_obs = torch.cat([plan_obs.unsqueeze(1), next_plan_obs], dim=1)
+            # todo should plan obs be differentiable here? if so, unindent next 3
+            all_plan_obs = torch.cat([plan_obs.unsqueeze(1), next_plan_obs], dim=1)
 
-        discount = discount ** torch.arange(all_plan_obs.shape[1]).to(self.device)
-        target_plan = torch.einsum('j,ijk->ik', discount, all_plan_obs)
+            discount = discount ** torch.arange(all_plan_obs.shape[1]).to(self.device)
+            target_plan = torch.einsum('j,ijk->ik', discount, all_plan_obs)
 
         plan = self.planner(plan_obs)
 
