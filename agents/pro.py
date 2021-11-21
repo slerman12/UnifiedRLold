@@ -37,9 +37,9 @@ class PROAgent:
         self.prop_target = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
         self.prop_target.load_state_dict(self.prop.state_dict())
 
-        self.Qint = DoubleQIntegral(action_shape, feature_dim, hidden_dim).to(device)
-        self.Qint_target = DoubleQIntegral(action_shape, feature_dim, hidden_dim).to(device)
-        self.Qint_target.load_state_dict(self.Qint.state_dict())
+        # self.Qint = DoubleQIntegral(action_shape, feature_dim, hidden_dim).to(device)
+        # self.Qint_target = DoubleQIntegral(action_shape, feature_dim, hidden_dim).to(device)
+        # self.Qint_target.load_state_dict(self.Qint.state_dict())
 
         # self.prop = DoubleMonoCritic(hidden_dim, hidden_dim, 3).to(device)
         # self.prop_target = DoubleMonoCritic(hidden_dim, hidden_dim, 3).to(device)
@@ -56,7 +56,7 @@ class PROAgent:
         self.actor_opt = torch.optim.Adam(self.actor.parameters(), lr=lr)
         # self.critic_opt = torch.optim.Adam(self.critic.parameters(), lr=lr)
         self.prop_opt = torch.optim.Adam(self.prop.parameters(), lr=lr)
-        self.Qint_opt = torch.optim.Adam(self.Qint.parameters(), lr=lr)
+        # self.Qint_opt = torch.optim.Adam(self.Qint.parameters(), lr=lr)
 
         # data augmentation
         self.aug = RandomShiftsAug(pad=4)
@@ -64,7 +64,7 @@ class PROAgent:
         self.train()
         # self.critic_target.train()
         self.prop_target.train()
-        self.Qint_target.train()
+        # self.Qint_target.train()
 
     def train(self, training=True):
         self.training = training
@@ -72,7 +72,7 @@ class PROAgent:
         self.actor.train(training)
         self.prop.train(training)
         # self.critic.train(training)
-        self.Qint.train(training)
+        # self.Qint.train(training)
 
     def act(self, obs, step, eval_mode):
         obs = torch.as_tensor(obs, device=self.device)
@@ -96,7 +96,7 @@ class PROAgent:
         log_pi = dist.log_prob(action)
         m1, b1, m2, b2 = self.prop_target(obs) if target else self.prop(obs)
 
-        i1, i2 = self.Qint_target(action) if target else self.Qint(action)
+        # i1, i2 = self.Qint_target(action) if target else self.Qint(action)
 
         # Q1 = torch.exp(m1 * log_pi + torch.log(b1))  # todo b can't be negative here
         # Q2 = torch.exp(m2 * log_pi + torch.log(b2))
@@ -117,10 +117,10 @@ class PROAgent:
         Q1 = torch.abs(m1) * log_pi.mean(-1, keepdim=True) + b1
         Q2 = torch.abs(m2) * log_pi.mean(-1, keepdim=True) + b2
 
-        iQ1 = log_pi.mean(-1, keepdim=True) * i1
-        iQ2 = log_pi.mean(-1, keepdim=True) * i2
-        Q1 = (Q1 + iQ1) / 2
-        Q2 = (Q2 + iQ2) / 2
+        # iQ1 = log_pi.mean(-1, keepdim=True) * i1
+        # iQ2 = log_pi.mean(-1, keepdim=True) * i2
+        # Q1 = (Q1 + iQ1) / 2
+        # Q2 = (Q2 + iQ2) / 2
 
         # todo can still scale by above state-based M, B
         # log_pi = log_pi.mean(-1, keepdim=True)  # todo keep dims separate
@@ -154,12 +154,12 @@ class PROAgent:
         self.encoder_opt.zero_grad(set_to_none=True)
         self.actor_opt.zero_grad(set_to_none=True)
         self.prop_opt.zero_grad(set_to_none=True)
-        self.Qint_opt.zero_grad(set_to_none=True)
+        # self.Qint_opt.zero_grad(set_to_none=True)
         critic_loss.backward()
         self.actor_opt.step()
         self.encoder_opt.step()
         self.prop_opt.step()
-        self.Qint_opt.step()
+        # self.Qint_opt.step()
 
         return metrics
 
@@ -223,7 +223,7 @@ class PROAgent:
                                  self.prop_target_tau)
 
         # update Qint target
-        utils.soft_update_params(self.Qint, self.Qint_target,
-                                 self.prop_target_tau)
+        # utils.soft_update_params(self.Qint, self.Qint_target,
+        #                          self.prop_target_tau)
 
         return metrics
