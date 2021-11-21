@@ -37,10 +37,10 @@ class BVSAgent:
         self.sub_planner = Planner(self.encoder.repr_dim,
                                    feature_dim, hidden_dim, plan_dim,
                                    action_shape, sub_planner=True).to(device)
-        # self.sub_planner_target = Planner(self.encoder.repr_dim,
-        #                                   feature_dim, hidden_dim, plan_dim,
-        #                                   action_shape, sub_planner=True).to(device)
-        # self.sub_planner_target.load_state_dict(self.sub_planner.state_dict())
+        self.sub_planner_target = Planner(self.encoder.repr_dim,
+                                          feature_dim, hidden_dim, plan_dim,
+                                          action_shape, sub_planner=True).to(device)
+        self.sub_planner_target.load_state_dict(self.sub_planner.state_dict())
         self.planner = Planner(plan_dim, plan_dim, plan_dim, plan_dim).to(device)
         self.planner_target = Planner(plan_dim, plan_dim, plan_dim, plan_dim).to(device)
         self.planner_target.load_state_dict(self.planner.state_dict())
@@ -63,7 +63,7 @@ class BVSAgent:
 
         self.train()
         self.critic_target.train()
-        # self.sub_planner_target.train()
+        self.sub_planner_target.train()
         self.planner_target.train()
 
     def train(self, training=True):
@@ -230,7 +230,7 @@ class BVSAgent:
         metrics.update(self.update_actor(obs.detach(), step))
 
         # update planner
-        # metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
+        metrics.update(self.update_planner(obs, action, all_obs, step, self.planner_discount))
 
         # update critic target
         utils.soft_update_params(self.critic, self.critic_target,
