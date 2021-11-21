@@ -9,7 +9,7 @@ import utils
 
 from blocks.augmentations import RandomShiftsAug
 from blocks.encoders import Encoder
-from blocks.actors import Actor, DoubleMonoCritic, DoublePropMB, DoubleQIntegral
+from blocks.actors import Actor, DoubleMonoCritic, DoublePropMB, DoubleQIntegral, PropMBEfficient
 # from blocks.critics import DoubleQCritic
 
 
@@ -33,6 +33,7 @@ class PROAgent:
         self.actor = Actor(self.encoder.repr_dim, action_shape, feature_dim,
                            hidden_dim).to(device)
 
+        DoublePropMB = PropMBEfficient
         self.prop = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
         self.prop_target = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
         self.prop_target.load_state_dict(self.prop.state_dict())
@@ -94,7 +95,8 @@ class PROAgent:
     def critic(self, obs, action, target=False):
         dist = self.actor(obs, 1)
         log_pi = dist.log_prob(action)
-        m1, b1, m2, b2 = self.prop_target(obs) if target else self.prop(obs)
+        # m1, b1, m2, b2 = self.prop_target(obs) if target else self.prop(obs)
+        m1, b1 = self.prop_target(obs) if target else self.prop(obs)
 
         # i1, i2 = self.Qint_target(action) if target else self.Qint(action)
 
@@ -115,7 +117,8 @@ class PROAgent:
         # Q2 = torch.abs(m2) * pi + b2
 
         Q1 = (torch.abs(m1) * log_pi + b1).mean(-1, keepdim=True)
-        Q2 = (torch.abs(m2) * log_pi + b2).mean(-1, keepdim=True)
+        # Q2 = (torch.abs(m2) * log_pi + b2).mean(-1, keepdim=True)
+        Q2 = Q1
 
         # iQ1 = log_pi.mean(-1, keepdim=True) * i1
         # iQ2 = log_pi.mean(-1, keepdim=True) * i2
