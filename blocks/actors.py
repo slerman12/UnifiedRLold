@@ -83,6 +83,7 @@ class DoublePropMono(nn.Module):
         super().__init__()
         self.depth = depth
 
+        # todo val_dim
         def param():
             return ParameterList([torch.nn.Parameter(torch.Tensor(1, width, height)) for _ in range(depth)])
 
@@ -96,6 +97,7 @@ class DoublePropMono(nn.Module):
     def forward(self, val):
         q1 = q2 = val.unsqueeze(-1)
         for l in range(self.depth):
+            print(self.M1[l].shape, q1.shape)
             q1 = torch.min(torch.max(self.M1[l] * q1 + self.B1[l], dim=-1)[0], dim=-1)[0]
             q2 = torch.min(torch.max(self.M2[l] * q2 + self.B2[l], dim=-1)[0], dim=-1)[0]
         return q1, q2

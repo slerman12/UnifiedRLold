@@ -109,7 +109,7 @@ class PROAgent:
         # Q1 = torch.abs(m1) * log_pi.mean(-1, keepdim=True) + b1
         # Q2 = torch.abs(m2) * log_pi.mean(-1, keepdim=True) + b2
 
-        log_pi = log_pi.mean(-1, keepdim=True)
+        log_pi = log_pi.mean(-1, keepdim=True)  # todo keep dims separate
         Q1, Q2 = self.prop_target(log_pi) if target else self.prop(log_pi)
         return Q1, Q2
 
