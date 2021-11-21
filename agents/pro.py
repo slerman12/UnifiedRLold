@@ -39,7 +39,7 @@ class PROAgent:
 
         self.Qint = DoubleQIntegral(action_shape, feature_dim, hidden_dim).to(device)
         self.Qint_target = DoubleQIntegral(action_shape, feature_dim, hidden_dim).to(device)
-        self.Qint_target.load_state_dict(self.prop.state_dict())
+        self.Qint_target.load_state_dict(self.Qint.state_dict())
 
         # self.prop = DoubleMonoCritic(hidden_dim, hidden_dim, 3).to(device)
         # self.prop_target = DoubleMonoCritic(hidden_dim, hidden_dim, 3).to(device)
