@@ -33,7 +33,8 @@ class PROAgent:
         self.actor = Actor(self.encoder.repr_dim, action_shape, feature_dim,
                            hidden_dim).to(device)
 
-        DoublePropMB = PropMBEfficient
+        # todo change prop to pro
+        # DoublePropMB = PropMBEfficient
         self.prop = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
         self.prop_target = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
         self.prop_target.load_state_dict(self.prop.state_dict())
@@ -95,8 +96,8 @@ class PROAgent:
     def critic(self, obs, action, target=False):
         dist = self.actor(obs, 1)
         log_pi = dist.log_prob(action)
-        # m1, b1, m2, b2 = self.prop_target(obs) if target else self.prop(obs)
-        m1, b1 = self.prop_target(obs) if target else self.prop(obs)
+        m1, b1, m2, b2 = self.prop_target(obs) if target else self.prop(obs)
+        # m1, b1 = self.prop_target(obs) if target else self.prop(obs)
 
         # i1, i2 = self.Qint_target(action) if target else self.Qint(action)
 
@@ -116,9 +117,13 @@ class PROAgent:
         # Q1 = torch.abs(m1) * pi + b1
         # Q2 = torch.abs(m2) * pi + b2
 
-        Q1 = (torch.abs(m1) * log_pi + b1).mean(-1, keepdim=True)
+        # Q1 = (torch.abs(m1) * log_pi + b1).mean(-1, keepdim=True)
         # Q2 = (torch.abs(m2) * log_pi + b2).mean(-1, keepdim=True)
-        Q2 = Q1
+        # Q2 = Q1
+
+        Q1 = torch.abs(m1) * log_pi + b1
+        Q2 = torch.abs(m2) * log_pi + b2
+        # Q2 = Q1
 
         # iQ1 = log_pi.mean(-1, keepdim=True) * i1
         # iQ2 = log_pi.mean(-1, keepdim=True) * i2
@@ -143,8 +148,9 @@ class PROAgent:
             target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
             target_V = torch.min(target_Q1, target_Q2)
             target_Q = reward + (discount * target_V)
+            target_Q = target_Q.expand(-1, action.shape[-1])
 
-        # todo non double Q learning, non dual Q learning, entropy, critic network, trust region
+        # todo non double Q learning, non dual Q learning, entropy, critic network, trust region, learnable stdev
         Q1, Q2 = self.critic(obs, action)
         critic_loss = F.mse_loss(Q1, target_Q) + F.mse_loss(Q2, target_Q)
 
