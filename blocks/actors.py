@@ -87,8 +87,8 @@ class DoublePropMBEfficient(nn.Module):
     def forward(self, obs):
         h = self.trunk(obs)
 
-        m1, b1 = torch.split(self.MB1(h), 2, dim=-1)
-        m2, b2 = torch.split(self.MB2(h), 2, dim=-1)
+        m1, b1 = torch.split(self.MB1(h), 1, dim=-1)
+        m2, b2 = torch.split(self.MB2(h), 1, dim=-1)
 
         return m1, b1, m2, b2
 
@@ -111,7 +111,7 @@ class PropMBEfficient(nn.Module):
     def forward(self, obs):
         h = self.trunk(obs)
 
-        m, b = torch.split(self.MB(h), 2, dim=-1)
+        m, b = torch.split(self.MB(h), 1, dim=-1)
 
         return m, b
 
