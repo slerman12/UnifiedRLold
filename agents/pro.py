@@ -114,8 +114,8 @@ class PROAgent:
         # Q1 = torch.abs(m1) * pi + b1
         # Q2 = torch.abs(m2) * pi + b2
 
-        Q1 = torch.abs(m1) * log_pi.mean(-1, keepdim=True) + b1
-        Q2 = torch.abs(m2) * log_pi.mean(-1, keepdim=True) + b2
+        Q1 = (torch.abs(m1) * log_pi + b1).mean(-1, keepdim=True)
+        Q2 = (torch.abs(m2) * log_pi + b2).mean(-1, keepdim=True)
 
         # iQ1 = log_pi.mean(-1, keepdim=True) * i1
         # iQ2 = log_pi.mean(-1, keepdim=True) * i2

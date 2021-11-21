@@ -34,35 +34,25 @@ class Actor(nn.Module):
 
 
 class DoublePropMB(nn.Module):
-    def __init__(self, repr_dim, feature_dim, hidden_dim):
+    def __init__(self, repr_dim, feature_dim, hidden_dim, action_shape):
         super().__init__()
+
+        action_dim = action_shape[-1]
 
         self.trunk = nn.Sequential(nn.Linear(repr_dim, feature_dim),
                                    nn.LayerNorm(feature_dim), nn.Tanh())
 
-        self.M1 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
-                                    nn.ReLU(inplace=True),
-                                    nn.Linear(hidden_dim, hidden_dim),
-                                    nn.ReLU(inplace=True),
-                                    nn.Linear(hidden_dim, 1))
+        def mlp():
+            return nn.Sequential(nn.Linear(feature_dim, hidden_dim),
+                                 nn.ReLU(inplace=True),
+                                 nn.Linear(hidden_dim, hidden_dim),
+                                 nn.ReLU(inplace=True),
+                                 nn.Linear(hidden_dim, action_dim))
 
-        self.B1 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
-                               nn.ReLU(inplace=True),
-                               nn.Linear(hidden_dim, hidden_dim),
-                               nn.ReLU(inplace=True),
-                               nn.Linear(hidden_dim, 1))
-
-        self.M2 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
-                               nn.ReLU(inplace=True),
-                               nn.Linear(hidden_dim, hidden_dim),
-                               nn.ReLU(inplace=True),
-                               nn.Linear(hidden_dim, 1))
-
-        self.B2 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
-                               nn.ReLU(inplace=True),
-                               nn.Linear(hidden_dim, hidden_dim),
-                               nn.ReLU(inplace=True),
-                               nn.Linear(hidden_dim, 1))
+        self.M1 = mlp()
+        self.B1 = mlp()
+        self.M2 = mlp()
+        self.B2 = mlp()
 
         self.apply(utils.weight_init)
 
@@ -70,11 +60,10 @@ class DoublePropMB(nn.Module):
         h = self.trunk(obs)
 
         m1 = self.M1(h)
-        # b1 = torch.abs(self.B1(h)) + 0.001
         b1 = self.B1(h)
         m2 = self.M2(h)
-        # b2 = torch.abs(self.B2(h)) + 0.001
         b2 = self.B2(h)
+
         return m1, b1, m2, b2
 
 
