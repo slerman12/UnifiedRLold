@@ -78,7 +78,7 @@ class DoublePropMB(nn.Module):
         return m1, b1, m2, b2
 
 
-class DoublePropMono(nn.Module):
+class DoubleMonoNet(nn.Module):
     def __init__(self, width, height, depth):
         super().__init__()
         self.depth = depth
