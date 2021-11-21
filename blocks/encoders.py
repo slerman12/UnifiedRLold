@@ -27,8 +27,10 @@ class Encoder(nn.Module):
         obs = obs / 255.0 - 0.5
         h = self.convnet(obs)
         if flatten:
-            h = h.view(h.shape[0], -1)
-        return h.view(*shape[:-1], h.shape[-1])
+            h = h.view(*shape[:-3], -1)
+        else:
+            h = h.view(*shape[:-3], *h.shape[-3:])
+        return h
 
 
 class SEEncoder(nn.Module):
