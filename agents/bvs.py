@@ -34,6 +34,7 @@ class BVSAgent:
                            hidden_dim).to(device)
 
         plan_dim = hidden_dim
+        # todo don't need sub_planner traget, just rename as subplan_encoder
         self.sub_planner = Planner(self.encoder.repr_dim,
                                    feature_dim, hidden_dim, plan_dim,
                                    action_shape, sub_planner=True).to(device)
@@ -71,6 +72,8 @@ class BVSAgent:
         self.encoder.train(training)
         self.actor.train(training)
         self.critic.train(training)
+        self.sub_planner.train(training)
+        self.planner.train(training)
 
     def act(self, obs, step, eval_mode):
         obs = torch.as_tensor(obs, device=self.device)

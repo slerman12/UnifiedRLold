@@ -78,6 +78,38 @@ class DoublePropMB(nn.Module):
         return m1, b1, m2, b2
 
 
+class DoubleQIntegral(nn.Module):
+    def __init__(self, action_shape, feature_dim, hidden_dim):
+        super().__init__()
+        action_dim = action_shape[-1]
+
+        self.trunk = nn.Sequential(nn.Linear(action_dim, feature_dim),
+                                   nn.ReLU(inplace=True),
+                                   nn.Linear(feature_dim, feature_dim),
+                                   nn.LayerNorm(feature_dim), nn.Tanh())
+
+        self.I1 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
+                                nn.ReLU(inplace=True),
+                                nn.Linear(hidden_dim, hidden_dim),
+                                nn.ReLU(inplace=True),
+                                nn.Linear(hidden_dim, 1))
+
+        self.I2 = nn.Sequential(nn.Linear(feature_dim, hidden_dim),
+                                nn.ReLU(inplace=True),
+                                nn.Linear(hidden_dim, hidden_dim),
+                                nn.ReLU(inplace=True),
+                                nn.Linear(hidden_dim, 1))
+
+        self.apply(utils.weight_init)
+
+    def forward(self, obs):
+        h = self.trunk(obs)
+
+        i1 = self.M1(h)
+        i2 = self.M2(h)
+        return i1, i2
+
+
 class DoubleMonoCritic(nn.Module):
     def __init__(self, width, height, depth):
         super().__init__()
@@ -97,6 +129,7 @@ class DoubleMonoCritic(nn.Module):
     def forward(self, val):
         q1 = q2 = val.unsqueeze(-1)
         for l in range(self.depth):
+            # todo softmax -> dim mean may be faster / more differentiable / gaurenteed positive M?
             q1 = torch.min(torch.max(torch.abs(self.M1[l]) * q1 + self.B1[l], dim=-1)[0], dim=-1)[0][:, None, None]
             q2 = torch.min(torch.max(torch.abs(self.M2[l]) * q2 + self.B2[l], dim=-1)[0], dim=-1)[0][:, None, None]
         return q1.squeeze(-1), q2.squeeze(-1)
