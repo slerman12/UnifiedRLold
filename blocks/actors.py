@@ -1,5 +1,7 @@
 import torch
 from torch import nn
+from torch.nn import ParameterList
+
 import utils
 
 from .networks import MLP
@@ -81,10 +83,10 @@ class DoublePropMono(nn.Module):
         super().__init__()
         self.depth = depth
 
-        self.M1 = [torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)]
-        self.B1 = [torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)]
-        self.M2 = [torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)]
-        self.B2 = [torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)]
+        self.M1 = ParameterList([torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)])
+        self.B1 = ParameterList([torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)])
+        self.M2 = ParameterList([torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)])
+        self.B2 = ParameterList([torch.nn.Parameter(torch.Tensor(width, height)) for _ in range(depth)])
 
         self.apply(utils.weight_init)
 
