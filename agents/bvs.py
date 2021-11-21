@@ -34,14 +34,13 @@ class BVSAgent:
                            hidden_dim).to(device)
 
         plan_dim = hidden_dim
-        # todo don't need sub_planner traget, just rename as subplan_encoder
         self.sub_planner = Planner(self.encoder.repr_dim,
                                    feature_dim, hidden_dim, plan_dim,
                                    action_shape, sub_planner=True).to(device)
-        self.sub_planner_target = Planner(self.encoder.repr_dim,
-                                          feature_dim, hidden_dim, plan_dim,
-                                          action_shape, sub_planner=True).to(device)
-        self.sub_planner_target.load_state_dict(self.sub_planner.state_dict())
+        # self.sub_planner_target = Planner(self.encoder.repr_dim,
+        #                                   feature_dim, hidden_dim, plan_dim,
+        #                                   action_shape, sub_planner=True).to(device)
+        # self.sub_planner_target.load_state_dict(self.sub_planner.state_dict())
         self.planner = Planner(plan_dim, plan_dim, plan_dim, plan_dim).to(device)
         self.planner_target = Planner(plan_dim, plan_dim, plan_dim, plan_dim).to(device)
         self.planner_target.load_state_dict(self.planner.state_dict())
@@ -64,7 +63,7 @@ class BVSAgent:
 
         self.train()
         self.critic_target.train()
-        self.sub_planner_target.train()
+        # self.sub_planner_target.train()
         self.planner_target.train()
 
     def train(self, training=True):
@@ -102,7 +101,7 @@ class BVSAgent:
             stddev = utils.schedule(self.stddev_schedule, step)
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
-            next_obs = self.sub_planner_target(next_obs, next_action)
+            next_obs = self.sub_planner(next_obs, next_action)
             next_obs = self.planner_target(next_obs)
             target_Q1, target_Q2 = self.critic_target(next_obs, next_action)
             target_V = torch.min(target_Q1, target_Q2)
@@ -161,31 +160,30 @@ class BVSAgent:
 
         # for now, do 2-step only todo
         all_obs = all_obs[:, 0:2]
+
         # encoder grads already cleared :/ todo (and no need to update encoder here)
         all_obs = all_obs.float()
         obs = self.encoder(self.aug(all_obs[:, 0]))
-
-        # all_obs = all_obs[:, 1:].float()
-
         plan_obs = self.sub_planner(obs, action)
 
         with torch.no_grad():
-            next_obs = self.aug(all_obs.view(-1, *all_obs.shape[2:]))
+            next_obs = all_obs[:, 1:].float()
+            next_obs = self.aug(next_obs)
             next_obs = self.encoder(next_obs)  # todo redundant last obs re-compute
 
             stddev = utils.schedule(self.stddev_schedule, step)
             dist = self.actor(next_obs, stddev)
             next_action = dist.sample(clip=self.stddev_clip)
 
-            next_plan_obs = self.sub_planner_target(next_obs, next_action)
-
-            next_plan_obs = next_plan_obs.view(*all_obs.shape[0:2], *next_plan_obs.shape[1:])
+            next_plan_obs = self.sub_planner(next_obs, next_action)
 
             next_plan_obs[:, -1] = self.planner_target(next_plan_obs[:, -1])
 
-            all_plan_obs = torch.cat([plan_obs.unsqueeze(1), next_plan_obs], dim=1)
-            discount = discount ** torch.arange(all_plan_obs.shape[1]).to(self.device)
-            target_plan = torch.einsum('j,ijk->ik', discount, all_plan_obs)
+        # todo should plan obs be differentiable here? if not, indent next 3
+        all_plan_obs = torch.cat([plan_obs.unsqueeze(1), next_plan_obs], dim=1)
+
+        discount = discount ** torch.arange(all_plan_obs.shape[1]).to(self.device)
+        target_plan = torch.einsum('j,ijk->ik', discount, all_plan_obs)
 
         plan = self.planner(plan_obs)
 
@@ -212,7 +210,7 @@ class BVSAgent:
         obs, action, reward, discount, next_obs, all_obs = utils.to_torch(
             batch, self.device)
 
-        # augment  todo just do it in one all_obs go
+        # augment
         obs = self.aug(obs.float())
         next_obs = self.aug(next_obs.float())
         # encode
@@ -238,8 +236,8 @@ class BVSAgent:
                                  self.critic_target_tau)
 
         # update planner target
-        utils.soft_update_params(self.sub_planner, self.sub_planner_target,
-                                 self.critic_target_tau)
+        # utils.soft_update_params(self.sub_planner, self.sub_planner_target,
+        #                          self.critic_target_tau)
         utils.soft_update_params(self.planner, self.planner_target,
                                  self.critic_target_tau)
 

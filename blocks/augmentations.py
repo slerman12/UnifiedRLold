@@ -9,6 +9,8 @@ class RandomShiftsAug(nn.Module):
         self.pad = pad
 
     def forward(self, x):
+        shape = x.shape
+        x = x.view(-1, shape[-1])
         n, c, h, w = x.size()
         assert h == w
         padding = tuple([self.pad] * 4)
@@ -31,10 +33,11 @@ class RandomShiftsAug(nn.Module):
         shift *= 2.0 / (h + 2 * self.pad)
 
         grid = base_grid + shift
-        return F.grid_sample(x,
+        output = F.grid_sample(x,
                              grid,
                              padding_mode='zeros',
                              align_corners=False)
+        return output.view(*shape[:-1], output.shape[-1])
 
 
 class Intensity(nn.Module):

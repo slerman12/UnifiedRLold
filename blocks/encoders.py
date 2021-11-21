@@ -7,6 +7,7 @@ from blocks.networks import Conv2d_tf
 class Encoder(nn.Module):
     def __init__(self, obs_shape):
         super().__init__()
+        self.obs_shape = obs_shape
 
         assert len(obs_shape) == 3
         self.repr_dim = 32 * 35 * 35
@@ -21,11 +22,13 @@ class Encoder(nn.Module):
         self.apply(utils.weight_init)
 
     def forward(self, obs, flatten=True):
+        shape = obs.shape
+        obs = obs.view(-1, *self.obs_shape)
         obs = obs / 255.0 - 0.5
         h = self.convnet(obs)
         if flatten:
             h = h.view(h.shape[0], -1)
-        return h
+        return h.view(*shape[:-1], h.shape[-1])
 
 
 class SEEncoder(nn.Module):
