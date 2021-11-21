@@ -9,7 +9,7 @@ import utils
 
 from blocks.augmentations import RandomShiftsAug
 from blocks.encoders import Encoder
-from blocks.actors import Actor, DoubleMonoNet
+from blocks.actors import Actor, DoubleMonoCritic
 from blocks.actors import DoublePropMB
 # from blocks.critics import DoubleQCritic
 
@@ -38,8 +38,8 @@ class PROAgent:
         # self.prop_target = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
         # self.prop_target.load_state_dict(self.prop.state_dict())
 
-        self.prop = DoubleMonoNet(hidden_dim, hidden_dim, 3).to(device)
-        self.prop_target = DoubleMonoNet(hidden_dim, hidden_dim, 3).to(device)
+        self.prop = DoubleMonoCritic(hidden_dim, hidden_dim, 3).to(device)
+        self.prop_target = DoubleMonoCritic(hidden_dim, hidden_dim, 3).to(device)
         self.prop_target.load_state_dict(self.prop.state_dict())
 
         # self.critic = DoubleQCritic(self.encoder.repr_dim, action_shape, feature_dim,
