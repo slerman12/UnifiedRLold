@@ -34,10 +34,8 @@ class Actor(nn.Module):
 
 
 class DoublePropMB(nn.Module):
-    def __init__(self, repr_dim, feature_dim, hidden_dim, action_shape):
+    def __init__(self, repr_dim, feature_dim, hidden_dim, 1):
         super().__init__()
-
-        action_dim = action_shape[-1]
 
         self.trunk = nn.Sequential(nn.Linear(repr_dim, feature_dim),
                                    nn.LayerNorm(feature_dim), nn.Tanh())
@@ -47,7 +45,7 @@ class DoublePropMB(nn.Module):
                                  nn.ReLU(inplace=True),
                                  nn.Linear(hidden_dim, hidden_dim),
                                  nn.ReLU(inplace=True),
-                                 nn.Linear(hidden_dim, action_dim))
+                                 nn.Linear(hidden_dim, 1))
 
         self.M1 = mlp()
         self.B1 = mlp()

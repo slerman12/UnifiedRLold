@@ -22,6 +22,7 @@ class Encoder(nn.Module):
         self.apply(utils.weight_init)
 
     def forward(self, obs, flatten=True):
+        # operates on last 3 dims of obs, preserves leading dims
         shape = obs.shape
         obs = obs.view(-1, *self.obs_shape)
         obs = obs / 255.0 - 0.5

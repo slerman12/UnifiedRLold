@@ -33,8 +33,8 @@ class PROAgent:
         self.actor = Actor(self.encoder.repr_dim, action_shape, feature_dim,
                            hidden_dim).to(device)
 
-        self.prop = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim, action_shape).to(device)
-        self.prop_target = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim, action_shape).to(device)
+        self.prop = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
+        self.prop_target = DoublePropMB(self.encoder.repr_dim, feature_dim, hidden_dim).to(device)
         self.prop_target.load_state_dict(self.prop.state_dict())
 
         # self.Qint = DoubleQIntegral(action_shape, feature_dim, hidden_dim).to(device)

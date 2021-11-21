@@ -9,6 +9,7 @@ class RandomShiftsAug(nn.Module):
         self.pad = pad
 
     def forward(self, x):
+        # operates on last 3 dims of x, preserves leading dims
         shape = x.shape
         x = x.view(-1, *shape[-3:])
         n, c, h, w = x.size()
